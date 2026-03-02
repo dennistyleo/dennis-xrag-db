@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # XRAG 公理引擎
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -207,3 +208,7 @@ MIT License
 
 🤝 貢獻
 歡迎提交 Issue 或 Pull Request！
+=======
+# dennis-xrag-db
+Extreme Reliability Axiom Generator
+>>>>>>> f63aebb069ec9e4032a2f42c53083bf3d551f73b
