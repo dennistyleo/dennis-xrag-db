@@ -1,0 +1,24 @@
+{
+    "domain": "thermal",
+    "count": 3,
+    "axioms": [
+        {
+            "name": "Fourier's Law (1D Steady-State)",
+            "form": "Q = k\u00b7A\u00b7\u0394T/d",
+            "type": "heat_conduction",
+            "variables": "k,A,\u0394T,d,Q"
+        },
+        {
+            "name": "Fourier's Law (1D Steady-State)",
+            "form": "Q = k\u00b7A\u00b7\u0394T/d",
+            "type": "heat_conduction",
+            "variables": "k,A,\u0394T,d,Q"
+        },
+        {
+            "name": "Stefan-Boltzmann Law",
+            "form": "P = \u03b5\u00b7\u03c3\u00b7A\u00b7T\u2074",
+            "type": "radiation",
+            "variables": "\u03b5,\u03c3,A,T,P"
+        }
+    ]
+}
