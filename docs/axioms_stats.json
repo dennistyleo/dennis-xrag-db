@@ -1,0 +1,24 @@
+{
+  "total": 136,
+  "by_domain": {
+    "aging": 9,
+    "causal_drift": 9,
+    "control_theory": 9,
+    "electrical": 2,
+    "emc": 3,
+    "financial_engineering": 9,
+    "fluid": 3,
+    "healthcare": 12,
+    "information_theory": 9,
+    "manufacturing": 12,
+    "mechanics": 3,
+    "power_supply": 9,
+    "quality_management": 12,
+    "quantum": 3,
+    "semiconductor": 4,
+    "statistics": 9,
+    "substrate": 12,
+    "thermal": 3,
+    "thermodynamics": 4
+  }
+}

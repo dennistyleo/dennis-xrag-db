@@ -1,0 +1,6555 @@
+{
+  "total": 136,
+  "export_date": "2026-03-02T18:31:45.094979",
+  "domains": {
+    "aging": [
+      {
+        "id": "ax_20260302_085549.423_arrhenius",
+        "name": "Arrhenius Model - Temperature Acceleration",
+        "domain": "aging",
+        "subdomain": "temperature",
+        "computational_core": {
+          "type": "acceleration_factor",
+          "form": "AF = exp[(Ea/k) × (1/T_use - 1/T_stress)]",
+          "constants": {
+            "k": 8.617e-05
+          },
+          "free_parameters": [
+            "Ea",
+            "T_use",
+            "T_stress"
+          ],
+          "description": "計算高溫加速老化因子，Ea為活化能(eV)，T為絕對溫度(K)"
+        },
+        "input_signature": {
+          "required_vars": [
+            "Ea",
+            "T_use",
+            "T_stress"
+          ]
+        },
+        "output_signature": {
+          "variable": "AF",
+          "units": "dimensionless",
+          "description": "加速因子"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Ea,k,T_use,T_stress,AF",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:55:49"
+      },
+      {
+        "id": "ax_20260302_085549.425_crystal_arrhenius",
+        "name": "Crystal Aging - Arrhenius Acceleration",
+        "domain": "aging",
+        "subdomain": "crystal",
+        "computational_core": {
+          "type": "acceleration",
+          "form": "t_use = t_test × exp[(Ea/k) × (1/T_use - 1/T_test)]",
+          "constants": {
+            "k": 8.617e-05
+          },
+          "free_parameters": [
+            "Ea",
+            "t_test",
+            "T_test",
+            "T_use"
+          ],
+          "note": "晶體活化能Ea範圍0.08-0.65eV，不同晶體類型差異很大"
+        },
+        "input_signature": {
+          "required_vars": [
+            "Ea",
+            "t_test",
+            "T_test",
+            "T_use"
+          ]
+        },
+        "output_signature": {
+          "variable": "t_use",
+          "units": "h"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Ea,t_test,T_test,T_use,k",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:55:49"
+      },
+      {
+        "id": "ax_20260302_085549.425_crystal_log",
+        "name": "Crystal Aging - Logarithmic Model",
+        "domain": "aging",
+        "subdomain": "crystal",
+        "computational_core": {
+          "type": "frequency_drift",
+          "form": "Δf/f = a·ln(b·t + 1) + c",
+          "free_parameters": [
+            "a",
+            "b",
+            "c"
+          ],
+          "description": "石英晶體頻率漂移的對數模型，大部分老化發生在第一年"
+        },
+        "input_signature": {
+          "required_vars": [
+            "t"
+          ],
+          "optional_vars": [
+            "a",
+            "b",
+            "c"
+          ]
+        },
+        "output_signature": {
+          "variable": "Δf/f",
+          "units": "ppm"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Δf,f,t",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:55:49"
+      },
+      {
+        "id": "ax_20260302_085549.426_cap_lifetime",
+        "name": "Electrolytic Capacitor Lifetime",
+        "domain": "aging",
+        "subdomain": "capacitor",
+        "computational_core": {
+          "type": "lifetime",
+          "form": "L_op = L_rated × 2^((T_rated - T_op)/10) × AF_ripple",
+          "rule_of_thumb": "溫度每升高10°C，壽命減半",
+          "free_parameters": [
+            "L_rated",
+            "T_rated",
+            "T_op",
+            "AF_ripple"
+          ],
+          "description": "電解電容壽命估算，包含溫度加速和漣波電流因子"
+        },
+        "input_signature": {
+          "required_vars": [
+            "L_rated",
+            "T_rated",
+            "T_op"
+          ],
+          "optional_vars": [
+            "AF_ripple"
+          ]
+        },
+        "output_signature": {
+          "variable": "L_op",
+          "units": "h"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "L_rated,T_rated,T_op,AF_ripple,L_op",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:55:49"
+      },
+      {
+        "id": "ax_20260302_085549.424_opamp_drift",
+        "name": "Op-Amp Offset Voltage Aging",
+        "domain": "aging",
+        "subdomain": "amplifier",
+        "computational_core": {
+          "type": "drift",
+          "form": "ΔV_os ∝ √t",
+          "rule_of_thumb": "ΔV_os(t₂) = ΔV_os(t₁) × √(t₂/t₁)",
+          "free_parameters": [
+            "ΔV_os_t1",
+            "t1",
+            "t2"
+          ],
+          "description": "運算放大器偏移電壓老化與時間平方根成正比"
+        },
+        "input_signature": {
+          "required_vars": [
+            "ΔV_os_t1",
+            "t1",
+            "t2"
+          ]
+        },
+        "output_signature": {
+          "variable": "ΔV_os",
+          "units": "μV"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "ΔV_os,t",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:55:49"
+      },
+      {
+        "id": "ax_20260302_085549.425_peck",
+        "name": "Peck Model - Temperature & Humidity",
+        "domain": "aging",
+        "subdomain": "humidity",
+        "computational_core": {
+          "type": "acceleration_factor",
+          "form": "AF = (RH_test/RH_use)^n × exp[(Ea/k) × (1/T_use - 1/T_test)]",
+          "constants": {
+            "k": 8.617e-05,
+            "n": 3
+          },
+          "free_parameters": [
+            "Ea",
+            "RH_test",
+            "RH_use",
+            "T_test",
+            "T_use"
+          ],
+          "description": "溫濕度共同作用的加速老化模型，n為濕度指數(典型值2-4)"
+        },
+        "input_signature": {
+          "required_vars": [
+            "Ea",
+            "RH_test",
+            "RH_use",
+            "T_test",
+            "T_use"
+          ]
+        },
+        "output_signature": {
+          "variable": "AF",
+          "units": "dimensionless"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Ea,RH_test,RH_use,T_test,T_use,k,AF",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:55:49"
+      },
+      {
+        "id": "ax_20260302_085549.426_random_walk",
+        "name": "Random Walk Aging Model",
+        "domain": "aging",
+        "subdomain": "stochastic",
+        "computational_core": {
+          "type": "stochastic_process",
+          "form": "x_k = x_{k-1} + w_k",
+          "properties": {
+            "mean_square": "E[x_k²] ∝ k",
+            "drift": "E[|x(t₂) - x(t₁)|] ∝ √|t₂ - t₁|"
+          },
+          "free_parameters": [
+            "w_k ~ N(0, σ²)"
+          ],
+          "description": "將老化視為隨機漫步過程，用於電壓基準、運放等元件的老化建模"
+        },
+        "input_signature": {
+          "required_vars": [
+            "t1",
+            "t2"
+          ],
+          "optional_vars": [
+            "σ"
+          ]
+        },
+        "output_signature": {
+          "variable": "drift",
+          "units": "proportional to √t"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "t,σ,drift",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:55:49"
+      },
+      {
+        "id": "ax_20260302_085549.424_resistor_drift",
+        "name": "Resistor Long-Term Drift (Vishay)",
+        "domain": "aging",
+        "subdomain": "resistor",
+        "computational_core": {
+          "type": "drift",
+          "form": "ΔR(t) = ΔR(t₀) × (t/t₀)^(1/3) × 2^((θ - θ₀)/30)",
+          "free_parameters": [
+            "ΔR(t₀)",
+            "t₀",
+            "t",
+            "θ₀",
+            "θ"
+          ],
+          "description": "薄膜電阻長期漂移，溫度每升高30°K，漂移增加2倍；漂移與時間的立方根成正比"
+        },
+        "input_signature": {
+          "required_vars": [
+            "ΔR_t0",
+            "t0",
+            "t",
+            "θ0",
+            "θ"
+          ]
+        },
+        "output_signature": {
+          "variable": "ΔR",
+          "units": "ppm"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "ΔR,t,θ,ΔR_t0,t0,θ0",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:55:49"
+      },
+      {
+        "id": "ax_20260302_085549.426_tddb",
+        "name": "TDDB - Time-Dependent Dielectric Breakdown",
+        "domain": "aging",
+        "subdomain": "gate_oxide",
+        "computational_core": {
+          "type": "lifetime",
+          "form": "τ = A·exp(γ·E_ox) or τ = A·exp(β/E_ox)",
+          "free_parameters": [
+            "E_ox",
+            "A",
+            "γ",
+            "β"
+          ],
+          "description": "柵氧化層時間相關擊穿，1/E模型或E模型",
+          "note": "用於MOSFET、IGBT等高溫柵偏(HTGB)試驗"
+        },
+        "input_signature": {
+          "required_vars": [
+            "E_ox"
+          ],
+          "optional_vars": [
+            "A",
+            "γ",
+            "β"
+          ]
+        },
+        "output_signature": {
+          "variable": "τ",
+          "units": "h"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "E_ox,τ",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:55:49"
+      }
+    ],
+    "causal_drift": [
+      {
+        "id": "ax_20260302_085841.298_cusum",
+        "name": "CUSUM Drift Detection",
+        "domain": "causal_drift",
+        "subdomain": "sequential_detection",
+        "computational_core": {
+          "type": "sequential_test",
+          "form": "S_t = max(0, S_{t-1} + (x_t - μ) - k)",
+          "description": "累積和漂移檢測，用於即時監控系統漂移",
+          "threshold": "h 決定警報閾值",
+          "free_parameters": [
+            "μ",
+            "k",
+            "h"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "x_t",
+            "μ"
+          ],
+          "optional_vars": [
+            "k",
+            "h"
+          ]
+        },
+        "output_signature": {
+          "variable": "S_t",
+          "units": "dimensionless",
+          "interpretation": "S_t > h 表示漂移發生"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "x,μ,k,h,S_t",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:58:41"
+      },
+      {
+        "id": "ax_20260302_085841.300_causal_effect",
+        "name": "Causal Effect Drift",
+        "domain": "causal_drift",
+        "subdomain": "intervention",
+        "computational_core": {
+          "type": "effect_estimation",
+          "form": "ΔE[Y|do(X)] = E[Y|do(X),t₂] - E[Y|do(X),t₁]",
+          "description": "介入效果隨時間的變化表示因果效應漂移",
+          "do_calculus": "使用Pearl的do-calculus估計因果效應",
+          "free_parameters": [
+            "t₁",
+            "t₂"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "Y",
+            "X",
+            "t₁",
+            "t₂"
+          ]
+        },
+        "output_signature": {
+          "variable": "ΔE",
+          "units": "depends on Y",
+          "interpretation": "非零表示因果效應漂移"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "X,Y,t,ΔE",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:58:41"
+      },
+      {
+        "id": "ax_20260302_085841.297_granger",
+        "name": "Granger Causality Test",
+        "domain": "causal_drift",
+        "subdomain": "causality_detection",
+        "computational_core": {
+          "type": "statistical_test",
+          "form": "X → Y if var(Y|past(Y)) > var(Y|past(X,Y))",
+          "description": "若加入X的過去值能顯著提高Y的預測能力，則X是Y的Granger原因",
+          "test_statistic": "F = [(RSS_r - RSS_u)/p] / [RSS_u/(n-2p-1)]",
+          "free_parameters": [
+            "lag_order",
+            "significance_level"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "X_series",
+            "Y_series"
+          ],
+          "optional_vars": [
+            "lag"
+          ]
+        },
+        "output_signature": {
+          "variable": "p_value",
+          "units": "dimensionless",
+          "interpretation": "p < 0.05 表示存在因果"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "X,Y,lag,p,F",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:58:41"
+      },
+      {
+        "id": "ax_20260302_085841.299_kl_drift",
+        "name": "KL Divergence Drift Detection",
+        "domain": "causal_drift",
+        "subdomain": "distribution_drift",
+        "computational_core": {
+          "type": "divergence_metric",
+          "form": "D_KL(P||Q) = ∑ P(x) log(P(x)/Q(x))",
+          "description": "KL散度衡量兩個概率分布的差異，用於檢測輸入分布漂移",
+          "causal_implication": "分布漂移可能導致因果關係失效",
+          "free_parameters": [
+            "P_distribution",
+            "Q_distribution"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "P",
+            "Q"
+          ]
+        },
+        "output_signature": {
+          "variable": "D_KL",
+          "units": "nats",
+          "interpretation": "越大表示分布差異越大"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P,Q,D_KL",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:58:41"
+      },
+      {
+        "id": "ax_20260302_085841.296_mahalanobis",
+        "name": "Mahalanobis Distance Drift Detection",
+        "domain": "causal_drift",
+        "subdomain": "multivariate_detection",
+        "computational_core": {
+          "type": "distance_metric",
+          "form": "D_M(x) = √[(x - μ)ᵀ·Σ⁻¹·(x - μ)]",
+          "description": "馬氏距離考慮變數間的相關性，用於檢測多變量漂移",
+          "threshold": "χ²分位數決定漂移邊界",
+          "free_parameters": [
+            "μ",
+            "Σ"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "x_vector",
+            "μ_vector",
+            "Σ_matrix"
+          ]
+        },
+        "output_signature": {
+          "variable": "D_M",
+          "units": "dimensionless",
+          "interpretation": "> threshold 表示顯著漂移"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "x,μ,Σ,D_M",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:58:41"
+      },
+      {
+        "id": "ax_20260302_085841.298_pearson_residual",
+        "name": "Pearson Residual Causal Drift",
+        "domain": "causal_drift",
+        "subdomain": "residual_analysis",
+        "computational_core": {
+          "type": "residual_metric",
+          "form": "r_ij = (x_ij - e_ij)/√e_ij",
+          "description": "皮爾遜殘差用於檢測觀測值與期望值的偏差",
+          "causal_interpretation": "殘差變化反映潛在因果結構漂移",
+          "free_parameters": [
+            "e_ij"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "x_ij",
+            "e_ij"
+          ]
+        },
+        "output_signature": {
+          "variable": "r_ij",
+          "units": "dimensionless",
+          "interpretation": "|r| > 2 表示顯著偏差"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "x,e,r",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:58:41"
+      },
+      {
+        "id": "ax_20260302_085841.299_sem_drift",
+        "name": "Structural Equation Model Drift",
+        "domain": "causal_drift",
+        "subdomain": "causal_structure",
+        "computational_core": {
+          "type": "model_drift",
+          "form": "x = Bx + ζ, where B is path coefficient matrix",
+          "description": "結構方程模型的係數變化表示因果強度漂移",
+          "drift_detection": "ΔB > threshold 表示因果關係變化",
+          "free_parameters": [
+            "B_matrix"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "x_vector",
+            "B_matrix"
+          ]
+        },
+        "output_signature": {
+          "variable": "ΔB",
+          "units": "dimensionless",
+          "interpretation": "係數變化量"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "x,B,ΔB",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:58:41"
+      },
+      {
+        "id": "ax_20260302_085841.300_ts_drift",
+        "name": "Time Series Causal Drift Detection",
+        "domain": "causal_drift",
+        "subdomain": "time_series",
+        "computational_core": {
+          "type": "causal_strength",
+          "form": "C(X→Y) = (1/T)∑_{t=1}^T |ρ(X_{t-lag}, Y_t)|",
+          "description": "時間序列中因果強度隨時間的變化",
+          "moving_window": "使用滑動窗口計算因果強度變化",
+          "free_parameters": [
+            "window_size",
+            "lag"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "X_series",
+            "Y_series"
+          ],
+          "optional_vars": [
+            "window",
+            "lag"
+          ]
+        },
+        "output_signature": {
+          "variable": "ΔC",
+          "units": "dimensionless",
+          "interpretation": "因果強度變化"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "X,Y,window,lag,ΔC",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:58:41"
+      },
+      {
+        "id": "ax_20260302_085841.301_xenoa_drift",
+        "name": "XENOA Causal Drift Vector (XR Core)",
+        "domain": "causal_drift",
+        "subdomain": "xr_core",
+        "computational_core": {
+          "type": "xenoa_semantic",
+          "form": "CDV = w₁·Δcausal + w₂·Δtemporal + w₃·Δsemantic + w₄·Δboundary",
+          "components": {
+            "Δcausal": "因果強度變化",
+            "Δtemporal": "時序關係變化",
+            "Δsemantic": "語義一致性變化",
+            "Δboundary": "邊界條件變化"
+          },
+          "description": "XENOA核心因果漂移向量，整合多維度漂移指標",
+          "threshold_logic": "if ||CDV|| > γ then trigger_drift_event",
+          "free_parameters": [
+            "w₁",
+            "w₂",
+            "w₃",
+            "w₄",
+            "γ"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "Δcausal",
+            "Δtemporal",
+            "Δsemantic",
+            "Δboundary"
+          ],
+          "optional_vars": [
+            "w₁",
+            "w₂",
+            "w₃",
+            "w₄",
+            "γ"
+          ]
+        },
+        "output_signature": {
+          "variable": "CDV",
+          "units": "dimensionless",
+          "interpretation": "綜合因果漂移向量，>γ表示系統狀態偏離預期"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Δcausal,Δtemporal,Δsemantic,Δboundary,CDV",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:58:41"
+      }
+    ],
+    "control_theory": [
+      {
+        "id": "ax_20260302_092024.664_controllability",
+        "name": "Controllability & Observability",
+        "domain": "control_theory",
+        "subdomain": "system_properties",
+        "computational_core": {
+          "type": "matrix_rank",
+          "form": {
+            "controllability": "rank([B, AB, A²B, ..., Aⁿ⁻¹B]) = n",
+            "observability": "rank([C; CA; CA²; ...; CAⁿ⁻¹]) = n"
+          },
+          "description": "能控性：能否用輸入控制所有狀態；能觀性：能否從輸出觀測所有狀態",
+          "free_parameters": [
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "A_matrix",
+            "B_matrix",
+            "C_matrix"
+          ]
+        },
+        "output_signature": {
+          "variable": "is_controllable",
+          "type": "boolean"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "A,B,C,controllable,observable",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.665_kalman",
+        "name": "Kalman Filter",
+        "domain": "control_theory",
+        "subdomain": "state_estimation",
+        "computational_core": {
+          "type": "recursive_estimator",
+          "form": {
+            "predict": "x̂_k|k-1 = A·x̂_{k-1} + B·u_k, P_k|k-1 = A·P_{k-1}·Aᵀ + Q",
+            "update": "K_k = P_k|k-1·Hᵀ(H·P_k|k-1·Hᵀ + R)⁻¹, x̂_k = x̂_k|k-1 + K_k(z_k - H·x̂_k|k-1), P_k = (I - K_k·H)·P_k|k-1"
+          },
+          "description": "最優線性狀態估計器，融合模型預測與量測",
+          "free_parameters": [
+            "Q",
+            "R"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "z_measurement",
+            "u_input"
+          ],
+          "optional_vars": [
+            "A",
+            "B",
+            "H",
+            "Q",
+            "R"
+          ]
+        },
+        "output_signature": {
+          "variable": "x̂_estimate",
+          "units": "state_units"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "z,u,A,B,H,Q,R,K,P,x̂",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.665_lyapunov",
+        "name": "Lyapunov Stability",
+        "domain": "control_theory",
+        "subdomain": "nonlinear_stability",
+        "computational_core": {
+          "type": "energy_function",
+          "form": "if V(x) > 0 and dV/dt < 0, then system is asymptotically stable",
+          "description": "用能量函數判斷非線性系統穩定性",
+          "common_candidates": [
+            "V(x) = xᵀPx",
+            "V(x) = quadratic_form"
+          ],
+          "free_parameters": [
+            "P_matrix"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "x_state",
+            "dx_dt"
+          ],
+          "optional_vars": [
+            "P"
+          ]
+        },
+        "output_signature": {
+          "variable": "is_stable",
+          "type": "boolean"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "x,dx,V,stable",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.664_nyquist",
+        "name": "Nyquist Stability Criterion",
+        "domain": "control_theory",
+        "subdomain": "stability_analysis",
+        "computational_core": {
+          "type": "frequency_domain",
+          "form": "Z = N + P",
+          "description": "Z = 閉環不穩定極點數，N = 奈奎斯特圖包圍(-1,0)圈數，P = 開環不穩定極點數",
+          "condition": "穩定若且唯若 Z = 0",
+          "free_parameters": [
+            "P_open"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "G_s"
+          ],
+          "optional_vars": [
+            "P"
+          ]
+        },
+        "output_signature": {
+          "variable": "Z",
+          "units": "dimensionless",
+          "interpretation": "0表示穩定"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "G,P,Z,N",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.662_pid",
+        "name": "PID Controller",
+        "domain": "control_theory",
+        "subdomain": "feedback",
+        "computational_core": {
+          "type": "controller",
+          "form": "u(t) = K_p·e(t) + K_i·∫e(τ)dτ + K_d·de/dt",
+          "components": {
+            "proportional": "K_p·e(t)",
+            "integral": "K_i·∫e(τ)dτ",
+            "derivative": "K_d·de/dt"
+          },
+          "error": "e(t) = r(t) - y(t)",
+          "description": "比例-積分-微分控制器，最廣泛應用的回饋控制算法",
+          "free_parameters": [
+            "K_p",
+            "K_i",
+            "K_d"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "r_setpoint",
+            "y_actual"
+          ],
+          "optional_vars": [
+            "K_p",
+            "K_i",
+            "K_d"
+          ]
+        },
+        "output_signature": {
+          "variable": "u",
+          "units": "control_signal",
+          "interpretation": "控制器輸出"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "r,y,e,K_p,K_i,K_d,u",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.665_pole_placement",
+        "name": "Pole Placement",
+        "domain": "control_theory",
+        "subdomain": "controller_design",
+        "computational_core": {
+          "type": "state_feedback",
+          "form": "u = -K·x",
+          "condition": "det(sI - (A-BK)) = desired_polynomial(s)",
+          "description": "設計狀態回饋增益K，將閉環極點配置到指定位置",
+          "free_parameters": [
+            "K_gain"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "A_matrix",
+            "B_matrix",
+            "desired_poles"
+          ]
+        },
+        "output_signature": {
+          "variable": "K",
+          "units": "gain_matrix"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "A,B,desired_poles,K",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.663_root_locus",
+        "name": "Root Locus Method",
+        "domain": "control_theory",
+        "subdomain": "stability_analysis",
+        "computational_core": {
+          "type": "graphical_method",
+          "form": "1 + K·G(s)·H(s) = 0",
+          "rules": [
+            "根軌跡起始於開環極點，終止於開環零點",
+            "實軸上奇數個極零點左側為根軌跡",
+            "漸近線角度 = (2q+1)π/(n-m)"
+          ],
+          "description": "分析系統增益變化對極點位置的影響",
+          "free_parameters": [
+            "K_gain"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "G_s",
+            "H_s"
+          ],
+          "optional_vars": [
+            "K"
+          ]
+        },
+        "output_signature": {
+          "variable": "poles",
+          "units": "complex_plane"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "G,H,K,poles",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.663_state_space",
+        "name": "State Space Model",
+        "domain": "control_theory",
+        "subdomain": "system_dynamics",
+        "computational_core": {
+          "type": "state_equation",
+          "form": {
+            "state": "dx/dt = A·x + B·u",
+            "output": "y = C·x + D·u"
+          },
+          "description": "現代控制理論核心，用矩陣描述系統動態",
+          "free_parameters": [
+            "A_matrix",
+            "B_matrix",
+            "C_matrix",
+            "D_matrix"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "x_state",
+            "u_input"
+          ],
+          "optional_vars": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        },
+        "output_signature": {
+          "variable": "y_output",
+          "units": "system_dependent"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "x,u,A,B,C,D,y",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.663_transfer",
+        "name": "Transfer Function",
+        "domain": "control_theory",
+        "subdomain": "frequency_domain",
+        "computational_core": {
+          "type": "laplace_domain",
+          "form": "G(s) = Y(s)/U(s) = (b_m·s^m + ... + b_0)/(a_n·s^n + ... + a_0)",
+          "description": "拉普拉斯域系統描述，分析穩定性與頻率響應",
+          "free_parameters": [
+            "numerator_coeffs",
+            "denominator_coeffs"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "U_s",
+            "Y_s"
+          ],
+          "optional_vars": [
+            "num",
+            "den"
+          ]
+        },
+        "output_signature": {
+          "variable": "G_s",
+          "units": "dimensionless"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "U,Y,num,den,G_s",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      }
+    ],
+    "electrical": [
+      {
+        "id": "ax_20260302_082918.351_impedance",
+        "name": "Impedance Formula",
+        "domain": "electrical",
+        "subdomain": "ac",
+        "computational_core": {
+          "type": "impedance",
+          "form": "Z = √(R² + (XL - XC)²)",
+          "free_parameters": [
+            "R",
+            "XL",
+            "XC"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "R",
+            "XL",
+            "XC"
+          ]
+        },
+        "output_signature": {
+          "variable": "Z",
+          "units": "Ω"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "R,XL,XC,Z",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:29:18"
+      },
+      {
+        "id": "ax_20260302_082918.349_ohm",
+        "name": "Ohm's Law",
+        "domain": "electrical",
+        "subdomain": "basic",
+        "computational_core": {
+          "type": "ohms_law",
+          "form": "V = I·R",
+          "free_parameters": [
+            "I",
+            "R"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "I",
+            "R"
+          ]
+        },
+        "output_signature": {
+          "variable": "V",
+          "units": "V"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "I,R,V",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:29:18"
+      }
+    ],
+    "emc": [
+      {
+        "id": "ax_20260302_084701.918_3w",
+        "name": "3W Rule for Crosstalk",
+        "domain": "emc",
+        "subdomain": "crosstalk",
+        "computational_core": {
+          "type": "design_rule",
+          "form": "s ≥ 3·W",
+          "free_parameters": [
+            "W"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "W"
+          ]
+        },
+        "output_signature": {
+          "variable": "s",
+          "units": "m"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "W,s",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:47:01"
+      },
+      {
+        "id": "ax_20260302_084701.918_z0",
+        "name": "Microstrip Characteristic Impedance",
+        "domain": "emc",
+        "subdomain": "transmission_line",
+        "computational_core": {
+          "type": "impedance",
+          "form": "Z₀ = (87/√(ε_r+1.41))·ln(5.98h/(0.8W+t))",
+          "free_parameters": [
+            "ε_r",
+            "h",
+            "W",
+            "t"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "ε_r",
+            "h",
+            "W",
+            "t"
+          ]
+        },
+        "output_signature": {
+          "variable": "Z₀",
+          "units": "Ω"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "ε_r,h,W,t,Z₀",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:47:01"
+      },
+      {
+        "id": "ax_20260302_084701.917_se",
+        "name": "Shielding Effectiveness",
+        "domain": "emc",
+        "subdomain": "shielding",
+        "computational_core": {
+          "type": "shielding",
+          "form": "SE = 20·log₁₀(E₁/E₂)",
+          "free_parameters": [
+            "E₁",
+            "E₂"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "E₁",
+            "E₂"
+          ]
+        },
+        "output_signature": {
+          "variable": "SE",
+          "units": "dB"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "E₁,E₂,SE",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:47:01"
+      }
+    ],
+    "financial_engineering": [
+      {
+        "id": "ax_20260302_092024.669_black_scholes",
+        "name": "Black-Scholes Option Pricing Model",
+        "domain": "financial_engineering",
+        "subdomain": "option_pricing",
+        "computational_core": {
+          "type": "pde",
+          "form": {
+            "pde": "∂V/∂t + ½σ²S²∂²V/∂S² + rS∂V/∂S - rV = 0",
+            "call_price": "C = S·N(d₁) - K·e⁻ʳᵀ·N(d₂)",
+            "d₁": "(ln(S/K) + (r + σ²/2)T)/(σ√T)",
+            "d₂": "d₁ - σ√T"
+          },
+          "description": "歐式選擇權定價模型，假設股價服從幾何布朗運動",
+          "free_parameters": [
+            "σ_volatility"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "S_price",
+            "K_strike",
+            "T_maturity",
+            "r_rate"
+          ],
+          "optional_vars": [
+            "σ"
+          ]
+        },
+        "output_signature": {
+          "variable": "C",
+          "units": "currency",
+          "interpretation": "買權價格"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "S,K,T,r,σ,C,d₁,d₂",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.670_bond",
+        "name": "Bond Pricing",
+        "domain": "financial_engineering",
+        "subdomain": "fixed_income",
+        "computational_core": {
+          "type": "discounting",
+          "form": "P = Σ C/(1+r)^t + F/(1+r)^T",
+          "description": "債券價格為未來現金流折現和",
+          "free_parameters": [
+            "r_yield",
+            "C_coupon",
+            "F_face",
+            "T_maturity"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "C",
+            "F",
+            "r",
+            "T"
+          ]
+        },
+        "output_signature": {
+          "variable": "P",
+          "units": "currency"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "C,F,r,T,P",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.669_capm",
+        "name": "Capital Asset Pricing Model (CAPM)",
+        "domain": "financial_engineering",
+        "subdomain": "asset_pricing",
+        "computational_core": {
+          "type": "linear_model",
+          "form": "E(R_i) = R_f + β_i·(E(R_m) - R_f)",
+          "β_formula": "β_i = Cov(R_i, R_m)/Var(R_m)",
+          "description": "資產預期報酬與市場風險的線性關係",
+          "free_parameters": [
+            "β"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "R_f",
+            "R_m",
+            "β"
+          ]
+        },
+        "output_signature": {
+          "variable": "E_R_i",
+          "units": "return"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "R_f,R_m,β,E_R",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.671_dupont",
+        "name": "DuPont Analysis",
+        "domain": "financial_engineering",
+        "subdomain": "fundamental_analysis",
+        "computational_core": {
+          "type": "decomposition",
+          "form": "ROE = (Net_Income/Sales) × (Sales/Assets) × (Assets/Equity)",
+          "components": [
+            "profit_margin",
+            "asset_turnover",
+            "financial_leverage"
+          ],
+          "description": "將股東權益報酬率分解為三個驅動因子"
+        },
+        "input_signature": {
+          "required_vars": [
+            "Net_Income",
+            "Sales",
+            "Assets",
+            "Equity"
+          ]
+        },
+        "output_signature": {
+          "variable": "ROE",
+          "units": "percentage"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "NI,Sales,Assets,Equity,ROE",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.670_futures",
+        "name": "Futures Pricing",
+        "domain": "financial_engineering",
+        "subdomain": "derivatives",
+        "computational_core": {
+          "type": "cost_of_carry",
+          "form": "F = S·e^(r·T) - Σ D·e^(r·(T-t))",
+          "description": "期貨價格 = 現貨價格 + 持有成本 - 持有收益",
+          "free_parameters": [
+            "S_spot",
+            "r_rate",
+            "T_time",
+            "D_dividends"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "S",
+            "r",
+            "T"
+          ],
+          "optional_vars": [
+            "D"
+          ]
+        },
+        "output_signature": {
+          "variable": "F",
+          "units": "currency"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "S,r,T,D,F",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.669_efficient_frontier",
+        "name": "Markowitz Efficient Frontier",
+        "domain": "financial_engineering",
+        "subdomain": "portfolio_optimization",
+        "computational_core": {
+          "type": "optimization",
+          "form": "min wᵀΣw subject to wᵀμ = μ_p, Σw = 1",
+          "description": "在給定預期報酬下，最小化投資組合風險",
+          "solution": "w* = (Σ⁻¹(μ - r_f·1))/(1ᵀΣ⁻¹(μ - r_f·1))",
+          "free_parameters": [
+            "μ_returns",
+            "Σ_covariance"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "μ_vector",
+            "Σ_matrix"
+          ],
+          "optional_vars": [
+            "r_f"
+          ]
+        },
+        "output_signature": {
+          "variable": "w_weights",
+          "units": "portfolio_weights"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "μ,Σ,r_f,w,σ_p,μ_p",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.671_martingale",
+        "name": "Martingale Process",
+        "domain": "financial_engineering",
+        "subdomain": "stochastic_process",
+        "computational_core": {
+          "type": "fair_game",
+          "form": "E[X_{t+1} | F_t] = X_t",
+          "description": "給定過去資訊，未來期望值等於現在值",
+          "applications": [
+            "有效市場假說",
+            "風險中性定價"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "X_t",
+            "X_{t+1}"
+          ],
+          "optional_vars": [
+            "F_t"
+          ]
+        },
+        "output_signature": {
+          "variable": "martingale_property",
+          "type": "boolean"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "X,t,F",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.670_sharpe",
+        "name": "Sharpe Ratio",
+        "domain": "financial_engineering",
+        "subdomain": "performance_metric",
+        "computational_core": {
+          "type": "risk_adjusted_return",
+          "form": "Sharpe = (E(R_p) - R_f) / σ_p",
+          "description": "每單位風險的超額報酬",
+          "interpretation": ">1 良好，>2 很好，>3 優異"
+        },
+        "input_signature": {
+          "required_vars": [
+            "R_p",
+            "R_f",
+            "σ_p"
+          ]
+        },
+        "output_signature": {
+          "variable": "Sharpe",
+          "units": "dimensionless"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "R_p,R_f,σ_p,Sharpe",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.669_var",
+        "name": "Value at Risk (VaR)",
+        "domain": "financial_engineering",
+        "subdomain": "risk_management",
+        "computational_core": {
+          "type": "quantile",
+          "form": "VaR_α = -F⁻¹(1-α)",
+          "description": "在給定信心水準下，預期最大損失",
+          "parametric": "VaR = -μ + σ·Φ⁻¹(1-α)  for normal distribution",
+          "free_parameters": [
+            "α_confidence"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "returns_distribution"
+          ],
+          "optional_vars": [
+            "α"
+          ]
+        },
+        "output_signature": {
+          "variable": "VaR",
+          "units": "currency"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "returns,α,VaR",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      }
+    ],
+    "fluid": [
+      {
+        "id": "ax_20260302_084701.919_bernoulli",
+        "name": "Bernoulli's Equation",
+        "domain": "fluid",
+        "subdomain": "dynamics",
+        "computational_core": {
+          "type": "energy_conservation",
+          "form": "P + ½ρv² + ρgh = constant",
+          "free_parameters": [
+            "P",
+            "ρ",
+            "v",
+            "h"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "P",
+            "ρ",
+            "v",
+            "h"
+          ]
+        },
+        "output_signature": {
+          "variable": "constant",
+          "units": "Pa"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P,ρ,v,h",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:47:01"
+      },
+      {
+        "id": "ax_20260302_084701.919_continuity",
+        "name": "Continuity Equation",
+        "domain": "fluid",
+        "subdomain": "conservation",
+        "computational_core": {
+          "type": "mass_conservation",
+          "form": "A₁·v₁ = A₂·v₂",
+          "free_parameters": [
+            "A₁",
+            "v₁",
+            "A₂",
+            "v₂"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "A₁",
+            "v₁"
+          ]
+        },
+        "output_signature": {
+          "variable": "flow_rate",
+          "units": "m³/s"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "A₁,v₁,A₂,v₂",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:47:01"
+      },
+      {
+        "id": "ax_20260302_084701.920_reynolds",
+        "name": "Reynolds Number",
+        "domain": "fluid",
+        "subdomain": "dimensionless",
+        "computational_core": {
+          "type": "flow_regime",
+          "form": "Re = ρ·v·L/μ",
+          "free_parameters": [
+            "ρ",
+            "v",
+            "L",
+            "μ"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "ρ",
+            "v",
+            "L",
+            "μ"
+          ]
+        },
+        "output_signature": {
+          "variable": "Re",
+          "units": "dimensionless"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "ρ,v,L,μ,Re",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:47:01"
+      }
+    ],
+    "healthcare": [
+      {
+        "id": "ax_20260302_093930.167_dx_causality",
+        "name": "Diagnostic Axiom: Causality Fallacy",
+        "domain": "healthcare",
+        "subdomain": "causal_reasoning",
+        "computational_core": {
+          "type": "logical_fallacy",
+          "form": "A → B does NOT imply A causes B",
+          "description": "兩個事件先後發生並不證明因果關係 [citation:1]",
+          "historical_example": {
+            "observation": "患有下泌尿道疾病的貓常有憩室",
+            "misconception": "憩室是病因，需手術切除",
+            "correct_understanding": "憩室是疾病的後遺症，藥物治療後多數自行消退",
+            "lesson": "治療後症狀改善不證明診斷正確或治療有效"
+          },
+          "clinical_application": "避免將時間順序誤解為因果關係"
+        },
+        "input_signature": {
+          "required_vars": [
+            "event_A",
+            "event_B",
+            "time_sequence"
+          ],
+          "optional_vars": [
+            "intervention"
+          ]
+        },
+        "output_signature": {
+          "variable": "causality_likelihood",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "A,B,Δt,causality",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.168_dx_compensation",
+        "name": "Diagnostic Axiom: Disease vs Compensatory Response",
+        "domain": "healthcare",
+        "subdomain": "homeostasis",
+        "computational_core": {
+          "type": "physiological_response",
+          "form": "clinical_signs = disease_induced ⊕ compensatory_response",
+          "description": "臨床表現可分為疾病直接引起的症狀，以及身體對這些症狀的代償反應 [citation:1]",
+          "examples": [
+            {
+              "disease": "雙側細菌性腎盂腎炎",
+              "direct_effect": "濃縮能力受損 → 強制性多尿",
+              "compensatory_response": "代償性劇渴以維持體液平衡"
+            },
+            {
+              "disease": "組織損傷",
+              "compensatory_response": "發炎反應"
+            },
+            {
+              "disease": "全身性感染",
+              "compensatory_response": "發燒"
+            },
+            {
+              "disease": "貧血",
+              "compensatory_response": "多染性紅細胞增多症"
+            }
+          ],
+          "diagnostic_trap": "僅憑膿尿診斷尿路感染是過度診斷，因膿尿可能是對感染或非感染性疾病的代償反應"
+        },
+        "input_signature": {
+          "required_vars": [
+            "primary_disease",
+            "observed_signs"
+          ],
+          "optional_vars": [
+            "compensatory_mechanisms"
+          ]
+        },
+        "output_signature": {
+          "variable": "sign_classification",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "disease_signs,compensatory_signs",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.167_dx_disease_vs_failure",
+        "name": "Diagnostic Axiom: Disease vs Organ Failure",
+        "domain": "healthcare",
+        "subdomain": "pathophysiology",
+        "computational_core": {
+          "type": "clinical_staging",
+          "form": "organ_disease ≠ organ_failure",
+          "description": "器官疾病與器官衰竭有概念上的區別：器官功能足以維持體內平衡不等於完全功能 [citation:1]",
+          "examples": [
+            {
+              "condition": "單腎捐贈者",
+              "function": "有足夠腎功能維持正常生活",
+              "disease_present": true,
+              "failure_present": false
+            },
+            {
+              "condition": "心臟瓣膜閉鎖不全",
+              "function": "正常心率和節律",
+              "disease_present": true,
+              "failure_present": false
+            }
+          ],
+          "clinical_implication": "疾病與衰竭的處理方式完全不同"
+        },
+        "input_signature": {
+          "required_vars": [
+            "organ_system",
+            "function_metrics"
+          ],
+          "optional_vars": [
+            "disease_progression"
+          ]
+        },
+        "output_signature": {
+          "variable": "clinical_status",
+          "type": "string",
+          "options": [
+            "disease",
+            "failure",
+            "both"
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "disease,function,failure",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.166_dx_obs_vs_int",
+        "name": "Diagnostic Axiom: Observations vs Interpretations",
+        "domain": "healthcare",
+        "subdomain": "clinical_reasoning",
+        "computational_core": {
+          "type": "diagnostic_principle",
+          "form": "observations ≠ interpretations",
+          "description": "臨床觀察（事實）與對觀察的解釋（推論）有概念上的區別，誤解此區別是診斷錯誤最常見的原因 [citation:1]",
+          "examples": [
+            {
+              "observation": "排便用力、疼痛",
+              "misinterpretation": "便秘",
+              "actual_diagnosis": "尿道阻塞"
+            }
+          ],
+          "clinical_application": "在接受客戶描述時，需區分客觀觀察與主觀解釋，避免將推論當作事實"
+        },
+        "input_signature": {
+          "required_vars": [
+            "chief_complaint",
+            "clinical_signs"
+          ],
+          "optional_vars": [
+            "patient_history"
+          ]
+        },
+        "output_signature": {
+          "variable": "diagnostic_accuracy",
+          "type": "boolean",
+          "condition": "observation ≠ inference"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "obs,inference,accuracy",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.168_dx_possibility_vs_probability",
+        "name": "Diagnostic Axiom: Possibility vs Probability",
+        "domain": "healthcare",
+        "subdomain": "bayesian_reasoning",
+        "computational_core": {
+          "type": "probabilistic_reasoning",
+          "form": "possible ≠ probable",
+          "description": "診斷可能性（邏輯上可能）與診斷概率（統計上可能）有概念上的區別 [citation:1]",
+          "principles": [
+            "大量相關臨床數據可將眾多可能性縮減為少數概率",
+            "即使如此，診斷概率仍是專業意見而非絕對事實",
+            "缺乏某疾病的臨床證據不等於該疾病不存在"
+          ],
+          "clinical_communication": "應讓患者/家屬了解診斷、預後和治療建議並非絕對正確",
+          "bayesian_formulation": "P(D|E) = P(E|D)·P(D)/P(E)"
+        },
+        "input_signature": {
+          "required_vars": [
+            "symptoms",
+            "test_results"
+          ],
+          "optional_vars": [
+            "prior_probability"
+          ]
+        },
+        "output_signature": {
+          "variable": "posterior_probability",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P_D,P_E_given_D,P_E,posterior",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.171_diagnostic_error",
+        "name": "Diagnostic Error Prevention Axioms",
+        "domain": "healthcare",
+        "subdomain": "diagnostic_safety",
+        "computational_core": {
+          "type": "axiom_collection",
+          "axioms": [
+            {
+              "id": 1,
+              "statement": "臨床印象本質上不可靠，通常符合預先存在的偏見 [citation:1]",
+              "example": "過去建議腎結石患者減少鈣攝取，但研究顯示反而增加復發率"
+            },
+            {
+              "id": 2,
+              "statement": "問題定義與問題解決有區別，準確定義問題是解決問題的前提 [citation:1]",
+              "implication": "獸醫應成為「問題定義大師」"
+            },
+            {
+              "id": 7,
+              "statement": "沒有兩個個體在健康時完全相同，在疾病時也不相同 [citation:1]",
+              "implication": "教科書描述的典型表現很少同時存在於同一患者"
+            },
+            {
+              "id": 8,
+              "statement": "有些患者我們無法幫助，但沒有患者我們無法傷害 [citation:1]",
+              "warning": "過度自信時、面子比生命重要時，傷害風險最高"
+            },
+            {
+              "id": 9,
+              "statement": "若沒有定期審計診斷準確性的系統，我們不太可能認識和糾正錯誤 [citation:1]",
+              "solution": "建立診斷審計機制"
+            }
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "clinical_scenario"
+          ],
+          "optional_vars": [
+            "cognitive_bias"
+          ]
+        },
+        "output_signature": {
+          "variable": "error_risk",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "bias,confidence,error_rate",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.169_endoscope_failure",
+        "name": "Endoscope Failure Diagnosis (Fuzzy Bayesian Network)",
+        "domain": "healthcare",
+        "subdomain": "medical_device_reliability",
+        "computational_core": {
+          "type": "fault_tree_analysis",
+          "description": "基於故障樹與模糊貝氏網路的醫療設備失效診斷模型 [citation:2][citation:5]",
+          "failure_probability": 0.00385,
+          "root_causes": [
+            {
+              "id": "X5",
+              "cause": "清潔不當",
+              "posterior_probability": 0.36064,
+              "mutual_information": 0.00749
+            },
+            {
+              "id": "X8",
+              "cause": "故障發現不及時",
+              "posterior_probability": 0.23571,
+              "mutual_information": 0.00591
+            },
+            {
+              "id": "X10",
+              "cause": "自然老化",
+              "posterior_probability": 0.11377,
+              "mutual_information": 0.00174
+            },
+            {
+              "id": "X6",
+              "cause": "運送不當",
+              "posterior_probability": 0.11344,
+              "mutual_information": 0.00202
+            }
+          ],
+          "methodology": "結合故障樹識別基本事件 → 專家評估條件機率 → 三角模糊數整合貝氏網路 → 後驗機率推理"
+        },
+        "input_signature": {
+          "required_vars": [
+            "equipment_type",
+            "failure_mode"
+          ],
+          "optional_vars": [
+            "usage_history",
+            "maintenance_log"
+          ]
+        },
+        "output_signature": {
+          "variable": "root_cause_probabilities",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "failure_rate,P_X5,P_X8,P_X6,P_X10",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.170_ai_agent_framework",
+        "name": "Medical AI Agent Framework (P-A-R-M)",
+        "domain": "healthcare",
+        "subdomain": "artificial_intelligence",
+        "computational_core": {
+          "type": "agent_architecture",
+          "components": [
+            {
+              "name": "planning",
+              "description": "認知核心，處理複雜資訊、進行推理、做出決策",
+              "technology": "LLM/VLM",
+              "clinical_application": "分析病歷、整合檢查結果、生成鑑別診斷"
+            },
+            {
+              "name": "action",
+              "description": "執行決策，產生具體輸出",
+              "interfaces": [
+                "API",
+                "hardware_interface",
+                "specialized_libraries"
+              ],
+              "clinical_application": "控制手術機器人、產生治療建議、發出警報"
+            },
+            {
+              "name": "reflection",
+              "description": "感知和解釋環境",
+              "capabilities": [
+                "multimodal_data_perception",
+                "real_time_monitoring"
+              ],
+              "clinical_application": "從醫學影像提取信息、監測患者即時狀況"
+            },
+            {
+              "name": "memory",
+              "description": "儲存過去經驗和知識，實現持續學習",
+              "clinical_application": "利用歷史患者數據優化個人化治療建議"
+            }
+          ],
+          "agent_types": [
+            {
+              "type": "tool-based_micro-tasks",
+              "complexity": "低",
+              "example": "證據綜合、劑量計算、DICOM HU提取 [citation:3]"
+            },
+            {
+              "type": "single-agent_reasoning",
+              "complexity": "中",
+              "example": "EMG報告生成、文獻篩選 [citation:3]"
+            },
+            {
+              "type": "multi-agent_ecosystems",
+              "complexity": "高",
+              "example": "罕見疾病診斷、基因編輯設計、上市後監測 [citation:3]"
+            }
+          ],
+          "comparison": {
+            "human_clinician": "生物智慧、意識、同理心",
+            "traditional_AI": "特定任務工具、被動、靜態",
+            "AI_agent": "自主系統、目標導向、適應性、上下文感知 [citation:6]"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "clinical_task"
+          ],
+          "optional_vars": [
+            "complexity_level"
+          ]
+        },
+        "output_signature": {
+          "variable": "recommended_agent_type",
+          "type": "string"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "task,complexity,agent_type",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.170_medical_ontology",
+        "name": "Medical Ontology Axiom Structure (OMAHA)",
+        "domain": "healthcare",
+        "subdomain": "knowledge_representation",
+        "computational_core": {
+          "type": "ontology_framework",
+          "standard": "OWL 2 EL",
+          "axiom_types": [
+            "SubClassOf",
+            "EquivalentClasses",
+            "DisjointClasses",
+            "SubObjectPropertyOf",
+            "SubDataPropertyOf",
+            "EquivalentObjectProperties",
+            "EquivalentDataProperties",
+            "TransitiveObjectProperty",
+            "ReflexiveObjectProperty",
+            "ObjectPropertyDomain",
+            "DataPropertyDomain",
+            "ObjectPropertyRange",
+            "DataPropertyRange",
+            "SameIndividual",
+            "DifferentIndividuals",
+            "ClassAssertion",
+            "ObjectPropertyAssertion",
+            "DataPropertyAssertion",
+            "FunctionalDataProperty",
+            "HasKey"
+          ],
+          "top_level_classes": [
+            "clinical_finding",
+            "procedure",
+            "observable_entity",
+            "pharmaceutical_biologic",
+            "body_structure",
+            "substance",
+            "organism",
+            "physical_energy",
+            "physical_object",
+            "qualifier_value",
+            "specimen",
+            "event",
+            "gene",
+            "gene_mutation",
+            "molecular_activity",
+            "biological_process",
+            "organization"
+          ],
+          "property_relations": 49,
+          "application": "疾病、症狀、手術、解剖、藥品、醫療器械等醫學領域的標準化本體建構 [citation:4]"
+        },
+        "input_signature": {
+          "required_vars": [
+            "medical_concept"
+          ],
+          "optional_vars": [
+            "relation_type"
+          ]
+        },
+        "output_signature": {
+          "variable": "ontology_structure",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "concept,relation,axiom",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.171_pk_pd",
+        "name": "Pharmacokinetics/Pharmacodynamics Principles",
+        "domain": "healthcare",
+        "subdomain": "clinical_pharmacology",
+        "computational_core": {
+          "type": "drug_behavior",
+          "pharmacokinetics": {
+            "definition": "藥物在體內的吸收、分佈、代謝、排除",
+            "acronym": "ADME",
+            "factors": [
+              "species_differences",
+              "organ_function",
+              "drug_interactions"
+            ]
+          },
+          "pharmacodynamics": {
+            "definition": "藥物的作用機制，以及身體對藥物的生理、生化、心理反應",
+            "factors": [
+              "receptor_binding",
+              "dose_response",
+              "therapeutic_window"
+            ]
+          },
+          "clinical_implications": [
+            {
+              "condition": "腎功能不全",
+              "consideration": "主要經腎排泄的藥物需調整劑量 [citation:9]"
+            },
+            {
+              "condition": "肝功能不全",
+              "consideration": "主要經肝代謝的藥物需調整劑量 [citation:9]"
+            },
+            {
+              "condition": "肥胖",
+              "consideration": "高脂溶性藥物作用時間可能延長 [citation:9]"
+            },
+            {
+              "condition": "營養不良",
+              "consideration": "低蛋白飲食可能降低腎清除率 [citation:9]"
+            }
+          ],
+          "dose_adjustment": "說明書中的治療劑量範圍需根據個體情況調整，不僅依據體重"
+        },
+        "input_signature": {
+          "required_vars": [
+            "drug_name",
+            "patient_weight"
+          ],
+          "optional_vars": [
+            "renal_function",
+            "hepatic_function",
+            "nutrition_status"
+          ]
+        },
+        "output_signature": {
+          "variable": "adjusted_dose",
+          "units": "mg/kg"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "dose,clearance,volume,halflife",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.171_self_limiting",
+        "name": "Self-Limiting Disease Axiom",
+        "domain": "healthcare",
+        "subdomain": "clinical_course",
+        "computational_core": {
+          "type": "disease_natural_history",
+          "form": "many_diseases_are_self_limiting",
+          "description": "許多疾病的嚴重程度在一兩天內會自行減輕，此時任何無害的治療都可能看似有效 [citation:1]",
+          "clinical_implication": {
+            "positive": "可考慮不治療，給予安心保證",
+            "negative": "避免將自然康復誤解為治療效果",
+            "ethical": "ethical_alternative is to dispense reassurance"
+          },
+          "examples": [
+            "普通感冒",
+            "輕度胃腸炎",
+            "部分病毒感染"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "symptom_duration",
+            "symptom_severity"
+          ],
+          "optional_vars": [
+            "intervention"
+          ]
+        },
+        "output_signature": {
+          "variable": "likely_course",
+          "type": "string",
+          "options": [
+            "self_limiting",
+            "progressive"
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "duration,severity,outcome",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      },
+      {
+        "id": "ax_20260302_093930.169_therapy_rights",
+        "name": "Ten Rights of Patient Therapy",
+        "domain": "healthcare",
+        "subdomain": "patient_safety",
+        "computational_core": {
+          "type": "medication_safety",
+          "form": "right_motive + right_knowledge → right_drug for right_patient at right_time in right_amount using right_dosage_form by right_route → right_response → right_record [citation:9]",
+          "rights": [
+            {
+              "right": "right_motive",
+              "description": "以患者利益為優先，而非自利動機",
+              "ethical_principle": "獸醫專業是服務導向而非利潤導向"
+            },
+            {
+              "right": "right_knowledge",
+              "description": "了解藥物的藥動學與藥效學，包括物種差異、器官衰竭影響、藥物交互作用",
+              "primum_non_nocere": "首先，不傷害"
+            },
+            {
+              "right": "right_drug",
+              "description": "選擇適當的治療類型：特異性、支持性、症狀性、緩和性"
+            },
+            {
+              "right": "right_patient",
+              "description": "確認藥物給予正確的患者，避免混淆"
+            },
+            {
+              "right": "right_time",
+              "description": "遵循適當的給藥間隔，確保治療濃度"
+            },
+            {
+              "right": "right_amount",
+              "description": "根據體重、器官功能、營養狀態個體化調整劑量"
+            },
+            {
+              "right": "right_dosage_form",
+              "description": "選擇適當的劑型（錠劑、膠囊、液劑、注射劑等）"
+            },
+            {
+              "right": "right_route",
+              "description": "選擇適當的給藥途徑（口服、靜脈、肌肉等）"
+            },
+            {
+              "right": "right_response",
+              "description": "設定治療目標，評估預期療效"
+            },
+            {
+              "right": "right_record",
+              "description": "及時記錄治療結果"
+            }
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "patient_id",
+            "drug_name",
+            "dose"
+          ],
+          "optional_vars": [
+            "route",
+            "timing",
+            "duration"
+          ]
+        },
+        "output_signature": {
+          "variable": "therapy_completeness",
+          "type": "float",
+          "range": [
+            0,
+            10
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "dose,timing,route,response",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:39:30"
+      }
+    ],
+    "information_theory": [
+      {
+        "id": "ax_20260302_092024.667_channel_capacity",
+        "name": "Channel Capacity",
+        "domain": "information_theory",
+        "subdomain": "communication",
+        "computational_core": {
+          "type": "maximum_rate",
+          "form": "C = max_{p(x)} I(X;Y)",
+          "description": "通道能可靠傳輸的最大資訊率",
+          "gaussian_channel": "C = ½·log₂(1 + SNR)"
+        },
+        "input_signature": {
+          "required_vars": [
+            "channel_model"
+          ],
+          "optional_vars": [
+            "SNR"
+          ]
+        },
+        "output_signature": {
+          "variable": "C",
+          "units": "bits/symbol"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "p_x,p_y_x,SNR,C",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.666_cross_entropy",
+        "name": "Cross Entropy",
+        "domain": "information_theory",
+        "subdomain": "divergence",
+        "computational_core": {
+          "type": "distance_measure",
+          "form": "H(p,q) = -∑ p(x)·log₂ q(x)",
+          "description": "用分布q編碼分布p所需的平均位元數",
+          "relation": "H(p,q) = H(p) + D_KL(p||q)"
+        },
+        "input_signature": {
+          "required_vars": [
+            "p_distribution",
+            "q_distribution"
+          ]
+        },
+        "output_signature": {
+          "variable": "H_pq",
+          "units": "bits"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "p,q,H_pq",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.668_fisher",
+        "name": "Fisher Information",
+        "domain": "information_theory",
+        "subdomain": "estimation",
+        "computational_core": {
+          "type": "cramér_rao",
+          "form": "I(θ) = E[(∂/∂θ log f(X;θ))²]",
+          "description": "衡量分布攜帶關於參數θ的資訊量",
+          "cramér_rao_bound": "Var(θ̂) ≥ 1/I(θ)"
+        },
+        "input_signature": {
+          "required_vars": [
+            "f_distribution",
+            "θ_parameter"
+          ]
+        },
+        "output_signature": {
+          "variable": "I",
+          "units": "inverse_variance"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "f,θ,I,CRB",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.668_info_bottleneck",
+        "name": "Information Bottleneck",
+        "domain": "information_theory",
+        "subdomain": "representation_learning",
+        "computational_core": {
+          "type": "tradeoff",
+          "form": "min I(X;T) - β I(T;Y)",
+          "description": "壓縮X的同時保留關於Y的資訊，找到最優表徵T",
+          "applications": [
+            "深度學習",
+            "聚類",
+            "維度縮減"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "p_xy"
+          ],
+          "optional_vars": [
+            "β"
+          ]
+        },
+        "output_signature": {
+          "variable": "T",
+          "units": "representation"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "X,Y,T,β,I",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.667_kl",
+        "name": "Kullback-Leibler Divergence",
+        "domain": "information_theory",
+        "subdomain": "divergence",
+        "computational_core": {
+          "type": "distance_measure",
+          "form": "D_KL(p||q) = ∑ p(x)·log₂(p(x)/q(x))",
+          "description": "衡量兩個分布的差異，非對稱",
+          "properties": "D_KL ≥ 0，等號成立若且唯若 p = q"
+        },
+        "input_signature": {
+          "required_vars": [
+            "p_distribution",
+            "q_distribution"
+          ]
+        },
+        "output_signature": {
+          "variable": "D_KL",
+          "units": "bits"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "p,q,D_KL",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.668_max_entropy",
+        "name": "Maximum Entropy Principle",
+        "domain": "information_theory",
+        "subdomain": "inference",
+        "computational_core": {
+          "type": "optimization",
+          "form": "max H(p) subject to constraints E[f_i(X)] = μ_i",
+          "description": "在給定約束下，選擇熵最大的分布（最無偏見）",
+          "solution": "p(x) = (1/Z) exp(∑ λ_i f_i(x))"
+        },
+        "input_signature": {
+          "required_vars": [
+            "constraints"
+          ],
+          "optional_vars": [
+            "f_functions"
+          ]
+        },
+        "output_signature": {
+          "variable": "p_maxent",
+          "units": "probability"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "f,μ,λ,Z,p",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.666_mutual_info",
+        "name": "Mutual Information",
+        "domain": "information_theory",
+        "subdomain": "dependency",
+        "computational_core": {
+          "type": "correlation_measure",
+          "form": "I(X;Y) = ∑∑ p(x,y)·log₂(p(x,y)/(p(x)p(y)))",
+          "description": "衡量兩個變數共享的資訊量，非線性相關性",
+          "properties": "I(X;Y) = H(X) - H(X|Y) = H(Y) - H(Y|X)"
+        },
+        "input_signature": {
+          "required_vars": [
+            "p_xy",
+            "p_x",
+            "p_y"
+          ]
+        },
+        "output_signature": {
+          "variable": "I",
+          "units": "bits",
+          "range": [
+            0,
+            "min(H(X),H(Y))"
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "p_x,p_y,p_xy,I",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.667_rate_distortion",
+        "name": "Rate-Distortion Function",
+        "domain": "information_theory",
+        "subdomain": "compression",
+        "computational_core": {
+          "type": "optimization",
+          "form": "R(D) = min_{p(x̂|x): E[d(x,x̂)] ≤ D} I(X;X̂)",
+          "description": "給定最大失真D，所需的最小資訊率",
+          "gaussian_source": "R(D) = ½·log₂(σ²/D) for D ≤ σ²"
+        },
+        "input_signature": {
+          "required_vars": [
+            "source_distribution",
+            "distortion_metric",
+            "D_max"
+          ]
+        },
+        "output_signature": {
+          "variable": "R",
+          "units": "bits/symbol"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "p_x,d,D,R",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      },
+      {
+        "id": "ax_20260302_092024.666_entropy",
+        "name": "Shannon Entropy",
+        "domain": "information_theory",
+        "subdomain": "fundamental",
+        "computational_core": {
+          "type": "uncertainty_measure",
+          "form": "H(X) = -∑ p(x)·log₂ p(x)",
+          "units": "bits",
+          "description": "衡量隨機變數的不確定性，資訊量的期望值",
+          "properties": {
+            "max": "log₂(n) 均勻分布",
+            "min": "0 確定性"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "p_distribution"
+          ]
+        },
+        "output_signature": {
+          "variable": "H",
+          "units": "bits",
+          "range": [
+            0,
+            "log₂(n)"
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "p,H",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:20:24"
+      }
+    ],
+    "manufacturing": [
+      {
+        "id": "ax_20260302_093307.328_aluminum_temp",
+        "name": "Aluminum Alloy Forming Temperature Ranges",
+        "domain": "manufacturing",
+        "subdomain": "thermal_processing",
+        "computational_core": {
+          "type": "temperature_guidelines",
+          "processes": [
+            {
+              "name": "壓鑄",
+              "temperature_range": "620-680°C",
+              "mold_temperature": "200-300°C",
+              "cooling_rate": "快速"
+            },
+            {
+              "name": "重力鑄造",
+              "temperature_range": "680-750°C",
+              "mold_temperature": "150-300°C",
+              "cooling_rate": "中等"
+            },
+            {
+              "name": "熱擠壓",
+              "temperature_range": "400-500°C",
+              "ram_speed": "5-50 mm/s",
+              "exit_temperature": "500-550°C"
+            },
+            {
+              "name": "熱鍛造",
+              "temperature_range": "350-450°C",
+              "die_temperature": "200-350°C",
+              "strain_rate": "0.1-10 s⁻¹"
+            },
+            {
+              "name": "冷鍛",
+              "temperature_range": "室溫",
+              "limitation": "需中間退火"
+            },
+            {
+              "name": "熱處理-T4",
+              "temperature_range": "500-530°C",
+              "soaking_time": "1-2小時",
+              "cooling": "水淬"
+            },
+            {
+              "name": "熱處理-T6",
+              "temperature_range": "170-190°C",
+              "aging_time": "4-12小時",
+              "cooling": "空冷"
+            }
+          ],
+          "critical_temperatures": {
+            "recrystallization": "250-350°C（依合金）",
+            "solution_treatment": "500-530°C",
+            "overaging": ">200°C"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "process_type",
+            "alloy_series"
+          ],
+          "optional_vars": [
+            "desired_temper"
+          ]
+        },
+        "output_signature": {
+          "variable": "T_range",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "T_process,T_mold,t_soak",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.328_aluminum_props",
+        "name": "Aluminum Alloy Material Properties",
+        "domain": "manufacturing",
+        "subdomain": "materials",
+        "computational_core": {
+          "type": "material_database",
+          "alloys": [
+            {
+              "series": "1xxx (純鋁)",
+              "properties": "導電性佳、耐腐蝕、強度低",
+              "applications": "電工材料、化工設備"
+            },
+            {
+              "series": "2xxx (鋁銅)",
+              "properties": "高強度、熱處理強化",
+              "applications": "航空結構件"
+            },
+            {
+              "series": "5xxx (鋁鎂)",
+              "properties": "中高強度、焊接性佳、耐腐蝕",
+              "applications": "船舶、汽車板"
+            },
+            {
+              "series": "6xxx (鋁鎂矽)",
+              "properties": "擠壓性佳、熱處理強化",
+              "applications": "建築型材、車身結構"
+            },
+            {
+              "series": "7xxx (鋁鋅)",
+              "properties": "最高強度",
+              "applications": "航空結構"
+            }
+          ],
+          "physical_properties": {
+            "density": "2.7 g/cm³",
+            "melting_range": "550-650°C",
+            "thermal_conductivity": "150-200 W/m·K",
+            "electrical_conductivity": "30-60% IACS",
+            "CTE": "23-24 ppm/°C"
+          },
+          "mechanical_properties": {
+            "yield_strength": "30-500 MPa（依合金與回火）",
+            "tensile_strength": "70-600 MPa",
+            "elongation": "3-35%",
+            "hardness": "20-150 HB"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "alloy_series"
+          ],
+          "optional_vars": [
+            "temper"
+          ]
+        },
+        "output_signature": {
+          "variable": "material_props",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "ρ,σ_y,σ_ult,E,CTE",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.326_die_casting",
+        "name": "Aluminum Die Casting Process",
+        "domain": "manufacturing",
+        "subdomain": "die_casting",
+        "computational_core": {
+          "type": "casting_process",
+          "description": "壓鑄是將熔融金屬在高壓下注入模具型腔的成形工藝",
+          "machine_types": [
+            {
+              "type": "冷室壓鑄",
+              "applicability": "鋁合金、鎂合金等高熔點金屬",
+              "process": "熔爐與壓射室分離，澆注後再壓射"
+            },
+            {
+              "type": "熱室壓鑄",
+              "applicability": "鋅合金、錫合金等低熔點金屬",
+              "process": "壓射室浸在熔湯中"
+            }
+          ],
+          "common_alloys": [
+            {
+              "name": "A380",
+              "properties": "優異的鑄造性、機械性能平衡",
+              "applications": "電動工具、電子底盤、變速箱外殼"
+            },
+            {
+              "name": "A360",
+              "properties": "優異氣密性、耐腐蝕、流動性好",
+              "applications": "5G通訊盒、汽車控制器外殼"
+            },
+            {
+              "name": "A390",
+              "properties": "硬度高、耐磨性優異",
+              "applications": "汽車發動機缸體"
+            },
+            {
+              "name": "ADC-12",
+              "properties": "日本規格，綜合性能良好",
+              "applications": "通用壓鑄件"
+            }
+          ],
+          "advantages": [
+            "優良表面光潔度",
+            "尺寸穩定性高",
+            "可生產薄壁複雜件（<1.5mm）",
+            "氣密性與壓力密封性",
+            "適合大批量生產"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "alloy_type",
+            "part_complexity"
+          ],
+          "optional_vars": [
+            "production_volume"
+          ]
+        },
+        "output_signature": {
+          "variable": "recommended_alloy",
+          "type": "string"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "T_melt,P_inj,t_cycle,alloy",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.324_blanking",
+        "name": "Blanking and Piercing Process",
+        "domain": "manufacturing",
+        "subdomain": "stamping",
+        "computational_core": {
+          "type": "shearing_process",
+          "description": "沖裁是使板料沿封閉輪廓分離的工序",
+          "deformation_stages": [
+            {
+              "stage": "彈性變形",
+              "description": "凸模加壓，材料彈性壓縮"
+            },
+            {
+              "stage": "塑性變形",
+              "description": "刃口切入材料，產生塑性滑移"
+            },
+            {
+              "stage": "分離",
+              "description": "裂紋產生並擴展，材料分離"
+            }
+          ],
+          "clearance": {
+            "definition": "凸模與凹模之間的間隙",
+            "effect": {
+              "too_small": "二次剪切、毛刺增大、模具壽命降低",
+              "optimal": "裂紋重合、斷面光亮帶比例適中",
+              "too_large": "毛刺大、斷面錐度大"
+            },
+            "typical_value": "5-10% of material thickness"
+          },
+          "force_calculation": {
+            "blanking_force": "F = K × L × t × τ",
+            "K": "係數（通常1.3）",
+            "L": "沖裁周長",
+            "t": "材料厚度",
+            "τ": "抗剪強度"
+          },
+          "die_design": {
+            "punch_size": "沖孔尺寸 = 成品孔徑",
+            "die_size": "落料尺寸 = 成品外形尺寸",
+            "sharp_edge": "刃口需保持鋒利"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "material_thickness",
+            "perimeter",
+            "shear_strength"
+          ],
+          "optional_vars": [
+            "K_factor"
+          ]
+        },
+        "output_signature": {
+          "variable": "F_blanking",
+          "units": "N"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "t,L,τ,F_blanking",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.327_cutting_speed",
+        "name": "CNC Cutting Speed Formula",
+        "domain": "manufacturing",
+        "subdomain": "cnc_machining",
+        "computational_core": {
+          "type": "machining_parameter",
+          "description": "切削速度是刀具切削刃與工件表面的相對線速度",
+          "formula": "Vc = (π × D × n) / 1000",
+          "variables": {
+            "Vc": "切削速度 (m/min)",
+            "D": "刀具直徑 (mm)",
+            "n": "主軸轉速 (RPM)",
+            "π": 3.1416
+          },
+          "typical_values": {
+            "鋁合金": "300-1000 m/min",
+            "不鏽鋼": "80-150 m/min",
+            "模具鋼": "60-120 m/min",
+            "鈦合金": "30-60 m/min"
+          },
+          "tool_materials": {
+            "高速鋼": "適用低速",
+            "硬質合金": "適用高速",
+            "陶瓷": "適用極高速"
+          },
+          "影响因素": [
+            "工件材料硬度",
+            "刀具塗層",
+            "機台剛性",
+            "冷卻條件"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "tool_diameter",
+            "material_type"
+          ],
+          "optional_vars": [
+            "spindle_rpm"
+          ]
+        },
+        "output_signature": {
+          "variable": "Vc",
+          "units": "m/min"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "D,n,Vc",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.327_feed_power",
+        "name": "CNC Feed Rate and Cutting Power",
+        "domain": "manufacturing",
+        "subdomain": "cnc_machining",
+        "computational_core": {
+          "type": "machining_parameters",
+          "feed_rate_formula": "Vf = fz × Z × n",
+          "variables": {
+            "Vf": "進給速度 (mm/min)",
+            "fz": "每刃進給量 (mm/tooth)",
+            "Z": "刀具齒數",
+            "n": "主軸轉速 (RPM)"
+          },
+          "typical_fz_values": {
+            "鋁合金": "0.05-0.15 mm/tooth",
+            "不鏽鋼": "0.03-0.08 mm/tooth",
+            "模具鋼": "0.02-0.06 mm/tooth"
+          },
+          "cutting_power_formula": "P = (Ks × Vc × d × f) / (6000 × η)",
+          "power_variables": {
+            "P": "切削動力 (kW)",
+            "Ks": "比切削阻力 (N/mm²)",
+            "Vc": "切削速度 (m/min)",
+            "d": "切削深度 (mm)",
+            "f": "每轉進給量 (mm/rev)",
+            "η": "機械效率 (0.7-0.85)"
+          },
+          "torque_formula": "T = F × (D/2)",
+          "note": "粗加工選大進給、大切深、中低速；精加工選小進給、小切深、高速"
+        },
+        "input_signature": {
+          "required_vars": [
+            "tool_diameter",
+            "tool_teeth",
+            "material_type"
+          ],
+          "optional_vars": [
+            "depth_of_cut"
+          ]
+        },
+        "output_signature": {
+          "variable": "Vf",
+          "units": "mm/min"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "D,Z,n,fz,Vf,P",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.325_deep_drawing",
+        "name": "Deep Drawing Process",
+        "domain": "manufacturing",
+        "subdomain": "stamping",
+        "computational_core": {
+          "type": "forming_process",
+          "description": "拉深是將平板毛坯製成空心零件的成形工序",
+          "deformation_characteristics": {
+            "flange_area": "徑向受拉、切向受壓，可能起皺",
+            "wall_area": "傳力區，承受拉力可能破裂",
+            "bottom_area": "變形較小"
+          },
+          "drawing_ratio": {
+            "definition": "m = d/D，毛坯直徑與成品直徑比",
+            "limit_drawing_ratio": "材料一次拉深能達到的最大變形程度",
+            "typical_values": {
+              "低碳鋼": "0.50-0.55",
+              "不鏽鋼": "0.52-0.58",
+              "鋁合金": "0.53-0.60"
+            }
+          },
+          "blank_holder_force": {
+            "purpose": "防止起皺",
+            "formula": "F_h = A × q",
+            "A": "壓邊面積",
+            "q": "單位壓邊力"
+          },
+          "defects": {
+            "wrinkling": "壓邊力不足",
+            "tearing": "拉深比過大、潤滑不良",
+            "earing": "材料異向性"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "material_type",
+            "blank_diameter",
+            "part_diameter"
+          ],
+          "optional_vars": [
+            "thickness"
+          ]
+        },
+        "output_signature": {
+          "variable": "drawing_ratio",
+          "units": "dimensionless"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "D,d,m,F_h",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.326_die_casting_params",
+        "name": "Die Casting Process Parameters",
+        "domain": "manufacturing",
+        "subdomain": "die_casting",
+        "computational_core": {
+          "type": "process_parameters",
+          "parameters": {
+            "clamping_force": {
+              "definition": "鎖模力，用於平衡背壓防止金屬飛濺",
+              "formula": "F_lock ≥ K × F_main",
+              "K": "安全係數，通常1.25",
+              "F_main": "主膨脹力"
+            },
+            "injection_pressure": {
+              "typical": "60-100 MPa",
+              "effect": "影響鑄件緻密度和輪廓清晰度"
+            },
+            "injection_speed": {
+              "slow": "20-50 m/s",
+              "medium": "50-90 m/s",
+              "fast": "90-120 m/s",
+              "selection": "複雜薄壁件選高速，簡單厚壁件選低速"
+            },
+            "temperature": {
+              " pouring_temperature": "鋁合金620-680°C",
+              "mold_temperature": "200-300°C"
+            },
+            "time": {
+              "filling_time": "0.01-0.2秒",
+              "holding_time": "1-3秒",
+              "cooling_time": "依壁厚而定"
+            }
+          },
+          "defects": [
+            {
+              "name": "氣孔",
+              "cause": "排氣不良、注射速度過快"
+            },
+            {
+              "name": "縮孔",
+              "cause": "保壓不足、溫度過高"
+            },
+            {
+              "name": "冷隔",
+              "cause": "澆注溫度過低、填充速度慢"
+            },
+            {
+              "name": "粘模",
+              "cause": "溫度過高、脫模斜度不足"
+            }
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "projected_area",
+            "alloy_type"
+          ],
+          "optional_vars": [
+            "wall_thickness"
+          ]
+        },
+        "output_signature": {
+          "variable": "F_clamp",
+          "units": "kN"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "F_clamp,P_inj,v_inj,T_pour,T_mold",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.325_forming_limit",
+        "name": "Forming Limit Diagram (FLD)",
+        "domain": "manufacturing",
+        "subdomain": "stamping",
+        "computational_core": {
+          "type": "failure_prediction",
+          "description": "成形極限圖用於預測板料成形過程中是否會發生破裂",
+          "coordinate_system": {
+            "x_axis": "次應變 ε₂",
+            "y_axis": "主應變 ε₁"
+          },
+          "forming_limit_curve": {
+            "left_side": "ε₂ < 0（拉伸-壓縮應變狀態）",
+            "right_side": "ε₂ > 0（雙向拉伸應變狀態）"
+          },
+          "application": {
+            "below_curve": "安全區域",
+            "on_curve": "臨界狀態",
+            "above_curve": "破裂區域"
+          },
+          "influencing_factors": [
+            "材料厚度",
+            "應變硬化指數n",
+            "異向性係數r"
+          ],
+          "FLD0_formula": "FLD₀ = (n/0.21) × (23.3 + 14.13 × t)（經驗公式）"
+        },
+        "input_signature": {
+          "required_vars": [
+            "material_type",
+            "thickness",
+            "n_value"
+          ],
+          "optional_vars": [
+            "strain_path"
+          ]
+        },
+        "output_signature": {
+          "variable": "forming_limit",
+          "type": "curve"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "ε₁,ε₂,n,t,FLD₀",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.323_injection_params",
+        "name": "Plastic Injection Molding Parameters",
+        "domain": "manufacturing",
+        "subdomain": "injection_molding",
+        "computational_core": {
+          "type": "process_parameters",
+          "description": "塑膠射出成形五大關鍵參數：溫度、壓力、時間、速度、位置",
+          "parameters": {
+            "temperature": {
+              "cylinder_temperature": "料管溫度，分區控制（後段/中段/前段/噴嘴）",
+              "mold_temperature": "模具溫度，影響結晶度與冷卻時間",
+              "melt_temperature": "熔膠溫度，需在材料建議範圍內"
+            },
+            "pressure": {
+              "injection_pressure": "射出壓力，克服流動阻力",
+              "holding_pressure": "保壓壓力，補縮防止凹陷",
+              "back_pressure": "背壓，影響塑化品質"
+            },
+            "time": {
+              "injection_time": "充填時間",
+              "holding_time": "保壓時間",
+              "cooling_time": "冷卻時間",
+              "cycle_time": "成型週期"
+            },
+            "speed": {
+              "injection_speed": "射出速度，多段控制",
+              "screw_rpm": "螺桿轉速"
+            },
+            "position": {
+              "shot_size": "射出量",
+              "cushion": "殘量",
+              "switchover_point": "切換點（充填轉保壓）"
+            }
+          },
+          "defects": [
+            {
+              "name": "短射",
+              "cause": "熔膠不足、流動阻力大"
+            },
+            {
+              "name": "毛邊",
+              "cause": "鎖模力不足、射出壓力過高"
+            },
+            {
+              "name": "凹陷",
+              "cause": "保壓不足、冷卻不均"
+            },
+            {
+              "name": "翹曲",
+              "cause": "冷卻不均、分子配向"
+            },
+            {
+              "name": "熔接線",
+              "cause": "熔膠匯合處溫度過低"
+            },
+            {
+              "name": "流痕",
+              "cause": "射出速度過慢、模溫過低"
+            }
+          ],
+          "reference": "陳炤彰等，《塑膠射出成形模具設計與分析》，五南出版社"
+        },
+        "input_signature": {
+          "required_vars": [
+            "material_type",
+            "part_weight"
+          ],
+          "optional_vars": [
+            "wall_thickness",
+            "flow_length"
+          ]
+        },
+        "output_signature": {
+          "variable": "process_window",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "T_melt,T_mold,P_inj,P_hold,t_inj,t_cool",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.324_bending",
+        "name": "Sheet Metal Bending and Springback",
+        "domain": "manufacturing",
+        "subdomain": "stamping",
+        "computational_core": {
+          "type": "forming_process",
+          "description": "彎曲是將板料彎成一定角度和形狀的工序",
+          "deformation_analysis": {
+            "neutral_axis": "應變中性層位置，r > 0.5t時接近中心",
+            "outer_fiber": "受拉應力，可能破裂",
+            "inner_fiber": "受壓應力，可能起皺"
+          },
+          "minimum_bend_radius": {
+            "formula": "r_min = c × t",
+            "c": "係數，依材料而定（鋁合金0.8-1.5，不鏽鋼0.5-1.0）",
+            "t": "材料厚度"
+          },
+          "springback": {
+            "definition": "卸載後彈性回復導致的角度變化",
+            "influencing_factors": [
+              "材料降伏強度",
+              "彈性模數",
+              "彎曲半徑",
+              "彎曲角度"
+            ],
+            "compensation_methods": [
+              "過彎",
+              "底部整平",
+              "拉伸彎曲"
+            ]
+          },
+          "bend_allowance": {
+            "formula": "L = a + b + BA",
+            "BA": "彎曲補償量，依材料、厚度、彎曲半徑查表",
+            "note": "可使用折彎係數表或K因子計算"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "material_type",
+            "thickness",
+            "bend_angle"
+          ],
+          "optional_vars": [
+            "bend_radius"
+          ]
+        },
+        "output_signature": {
+          "variable": "bend_allowance",
+          "units": "mm"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "t,r,θ,BA,springback",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      },
+      {
+        "id": "ax_20260302_093307.327_sheetmetal_design",
+        "name": "Sheet Metal Design Guidelines",
+        "domain": "manufacturing",
+        "subdomain": "design_rules",
+        "computational_core": {
+          "type": "design_rules",
+          "bend_design": {
+            "minimum_bend_height": "H ≥ 2t + R",
+            "minimum_hole_distance": "距離彎曲邊 ≥ 3t + R",
+            "relief_notch": "彎曲處需加止裂槽，寬度 ≥ t，深度 ≥ R + t"
+          },
+          "hole_design": {
+            "minimum_hole_diameter": "≥ t（薄板），≥ 1.5t（厚板）",
+            "hole_to_edge": "≥ 2t",
+            "hole_to_hole": "≥ 3t"
+          },
+          "flange_design": {
+            "minimum_flange_height": "≥ 3t",
+            "flange_to_slot": "避免尖角"
+          },
+          "material_utilization": {
+            "nesting": "優化排樣可提高材料利用率",
+            "scrap_reduction": "共用廢料、無廢料排樣"
+          },
+          "tolerances": {
+            "laser_cutting": "±0.1mm",
+            "punching": "±0.2mm",
+            "bending": "±0.5°"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "material_thickness",
+            "process_type"
+          ],
+          "optional_vars": [
+            "tolerance_class"
+          ]
+        },
+        "output_signature": {
+          "variable": "design_rules",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "t,R,H_min,hole_d",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:33:07"
+      }
+    ],
+    "mechanics": [
+      {
+        "id": "ax_20260302_084701.920_hooke",
+        "name": "Hooke's Law",
+        "domain": "mechanics",
+        "subdomain": "elasticity",
+        "computational_core": {
+          "type": "stress_strain",
+          "form": "σ = E·ε",
+          "free_parameters": [
+            "E",
+            "ε"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "E",
+            "ε"
+          ]
+        },
+        "output_signature": {
+          "variable": "σ",
+          "units": "Pa"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "E,ε,σ",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:47:01"
+      },
+      {
+        "id": "ax_20260302_084701.920_thermal_expansion",
+        "name": "Thermal Expansion",
+        "domain": "mechanics",
+        "subdomain": "thermal_mechanical",
+        "computational_core": {
+          "type": "expansion",
+          "form": "ΔL = α·L₀·ΔT",
+          "free_parameters": [
+            "α",
+            "L₀",
+            "ΔT"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "α",
+            "L₀",
+            "ΔT"
+          ]
+        },
+        "output_signature": {
+          "variable": "ΔL",
+          "units": "m"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "α,L₀,ΔT,ΔL",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:47:01"
+      },
+      {
+        "id": "ax_20260302_084701.921_young",
+        "name": "Young's Modulus",
+        "domain": "mechanics",
+        "subdomain": "material_property",
+        "computational_core": {
+          "type": "modulus",
+          "form": "E = σ/ε",
+          "free_parameters": [
+            "σ",
+            "ε"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "σ",
+            "ε"
+          ]
+        },
+        "output_signature": {
+          "variable": "E",
+          "units": "Pa"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "σ,ε,E",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:47:01"
+      }
+    ],
+    "power_supply": [
+      {
+        "id": "ax_20260302_092424.263_ccm_dcm",
+        "name": "CCM/DCM Operation Modes (Switching Power Supply)",
+        "domain": "power_supply",
+        "subdomain": "switching_mode",
+        "computational_core": {
+          "type": "conduction_mode",
+          "description": "開關電源電感電流工作模式",
+          "modes": [
+            {
+              "name": "CCM (Continuous Conduction Mode)",
+              "definition": "電感電流在整個開關週期內從未降至0",
+              "transfer_function": "V_out = D × V_in (降壓型)",
+              "characteristics": [
+                "輸出無脈衝紋波",
+                "有脈衝輸入電流",
+                "續流二極體有反向恢復損耗"
+              ]
+            },
+            {
+              "name": "DCM (Discontinuous Conduction Mode)",
+              "definition": "電感電流在開關週期內會降至0",
+              "transfer_function": "V_out = f(D, RL, L, T)",
+              "characteristics": [
+                "功耗較低",
+                "轉換效率較高",
+                "輸出電流紋波較大",
+                "電感電流為0時可能產生振盪"
+              ]
+            }
+          ],
+          "critical_condition": "邊界導通模式 (BCM)，介於CCM與DCM之間"
+        },
+        "input_signature": {
+          "required_vars": [
+            "L",
+            "f_sw",
+            "I_load"
+          ],
+          "optional_vars": [
+            "Vin",
+            "Vout",
+            "D"
+          ]
+        },
+        "output_signature": {
+          "variable": "mode",
+          "type": "string",
+          "options": [
+            "CCM",
+            "DCM",
+            "BCM"
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "L,f_sw,I_load,Vin,Vout,D,mode",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:24:24"
+      },
+      {
+        "id": "ax_20260302_092424.262_cc_mode",
+        "name": "Constant Current Mode (CC)",
+        "domain": "power_supply",
+        "subdomain": "operation_mode",
+        "computational_core": {
+          "type": "current_source",
+          "description": "恆流模式下，輸出電流維持設定值恆定，輸出電壓隨負載變化",
+          "condition": "RL < R_critical = V_set / I_set",
+          "governing_law": "I_out = I_set, V_out = I_set × RL",
+          "power_formula": "P_out = I_set² × RL",
+          "applicability": "當負載電阻小於臨界電阻時，電源工作於CC模式",
+          "transition": "當RL升至R_critical以上，電源切換至CV模式"
+        },
+        "input_signature": {
+          "required_vars": [
+            "V_set",
+            "I_set",
+            "RL"
+          ],
+          "optional_vars": []
+        },
+        "output_signature": {
+          "variable": "mode",
+          "type": "string",
+          "value": "CC",
+          "outputs": {
+            "I_out": "I_set",
+            "V_out": "I_set×RL"
+          }
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "V_set,I_set,RL,R_critical,I_out,V_out",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:24:24"
+      },
+      {
+        "id": "ax_20260302_092424.264_cpl_equilibrium",
+        "name": "Constant Power Load Equilibrium Condition",
+        "domain": "power_supply",
+        "subdomain": "stability",
+        "computational_core": {
+          "type": "equilibrium_condition",
+          "description": "恆功率負載系統存在平衡點的充要條件",
+          "form": "P_dissipated ≥ P_load",
+          "explanation": "穩態消耗的功率必須大於或等於提取的恆定功率",
+          "condition": "系統存在平衡點若且唯若不等式成立",
+          "applications": [
+            "電力電子系統",
+            "DC/DC轉換器",
+            "AC/DC整流器"
+          ],
+          "system_types": {
+            "linear_time_invariant": "存在平衡點的充要條件可解析推導",
+            "port_hamiltonian": "包含功率轉換器的非線性系統"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "P_dissipated",
+            "P_load"
+          ],
+          "optional_vars": []
+        },
+        "output_signature": {
+          "variable": "equilibrium_exists",
+          "type": "boolean",
+          "condition": "P_dissipated ≥ P_load"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P_dissipated,P_load,equilibrium",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:24:24"
+      },
+      {
+        "id": "ax_20260302_092424.261_cv_mode",
+        "name": "Constant Voltage Mode (CV)",
+        "domain": "power_supply",
+        "subdomain": "operation_mode",
+        "computational_core": {
+          "type": "voltage_source",
+          "description": "恆壓模式下，輸出電壓維持設定值恆定，輸出電流隨負載變化",
+          "condition": "RL > R_critical = V_set / I_set",
+          "governing_law": "V_out = V_set, I_out = V_set / RL",
+          "power_formula": "P_out = V_set² / RL",
+          "applicability": "當負載電阻大於臨界電阻時，電源工作於CV模式",
+          "transition": "當RL降至R_critical以下，電源切換至CC模式"
+        },
+        "input_signature": {
+          "required_vars": [
+            "V_set",
+            "I_set",
+            "RL"
+          ],
+          "optional_vars": []
+        },
+        "output_signature": {
+          "variable": "mode",
+          "type": "string",
+          "value": "CV",
+          "outputs": {
+            "V_out": "V_set",
+            "I_out": "V_set/RL"
+          }
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "V_set,I_set,RL,R_critical,V_out,I_out",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:24:24"
+      },
+      {
+        "id": "ax_20260302_092424.262_critical_resistance",
+        "name": "Critical Resistance and Mode Transition",
+        "domain": "power_supply",
+        "subdomain": "operation_mode",
+        "computational_core": {
+          "type": "threshold",
+          "form": "R_critical = V_set / I_set",
+          "description": "臨界電阻決定電源的工作模式邊界",
+          "mode_rules": [
+            {
+              "condition": "RL > R_critical",
+              "mode": "CV"
+            },
+            {
+              "condition": "RL < R_critical",
+              "mode": "CC"
+            },
+            {
+              "condition": "RL = R_critical",
+              "mode": "boundary",
+              "note": "可能發生模式跳變"
+            }
+          ],
+          "compliance_voltage": "CC模式下，電壓上限為V_set",
+          "compliance_current": "CV模式下，電流上限為I_set"
+        },
+        "input_signature": {
+          "required_vars": [
+            "V_set",
+            "I_set"
+          ],
+          "optional_vars": [
+            "RL"
+          ]
+        },
+        "output_signature": {
+          "variable": "R_critical",
+          "units": "Ω",
+          "mode": "determined_by_RL"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "V_set,I_set,RL,R_critical",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:24:24"
+      },
+      {
+        "id": "ax_20260302_092424.263_norton",
+        "name": "Norton Equivalent Theorem",
+        "domain": "power_supply",
+        "subdomain": "equivalent_circuit",
+        "computational_core": {
+          "type": "network_theorem",
+          "description": "任何線性有源二端網絡，對外電路可用一個電流源與電阻並聯組合等效",
+          "form": {
+            "I_N": "I_sc = 短路電流",
+            "R_N": "R_in = 所有獨立源置零後的等效電阻（電壓源短路、電流源開路）"
+          },
+          "equivalent_circuit": "I_N 並聯 R_N",
+          "applicability": "僅適用於線性有源二端網絡",
+          "note": "諾頓等效與戴維南等效可互相轉換：V_th = I_N × R_N"
+        },
+        "input_signature": {
+          "required_vars": [
+            "I_sc",
+            "R_in"
+          ],
+          "optional_vars": []
+        },
+        "output_signature": {
+          "variable": "I_N",
+          "units": "A",
+          "R_N": "R_in"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "I_sc,R_in,I_N,R_N",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:24:24"
+      },
+      {
+        "id": "ax_20260302_092424.264_ripple_noise",
+        "name": "Power Supply Ripple and Noise Characteristics",
+        "domain": "power_supply",
+        "subdomain": "quality_metrics",
+        "computational_core": {
+          "type": "output_quality",
+          "description": "電源輸出的週期性與隨機性偏差 (PARD)",
+          "components": {
+            "ripple": {
+              "definition": "週期性波動，來自AC-DC整流",
+              "linear_supply": "主要為50/60 Hz低頻紋波",
+              "switching_supply": "除低頻紋波外，還有高頻開關紋波"
+            },
+            "noise": {
+              "definition": "隨機性干擾，分佈在所有頻率",
+              "sources": [
+                "環境噪聲",
+                "開關噪聲",
+                "熱噪聲"
+              ]
+            }
+          },
+          "measurement": "通常用峰峰值 (Vpp) 或有效值 (RMS) 表示",
+          "mitigation": "使用屏蔽雙絞線、增加濾波電容、優化佈局"
+        },
+        "input_signature": {
+          "required_vars": [
+            "V_out"
+          ],
+          "optional_vars": [
+            "f_ripple"
+          ]
+        },
+        "output_signature": {
+          "variable": "ripple_noise",
+          "units": "Vpp or RMS"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "V_out,V_ripple,V_noise,f_ripple",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:24:24"
+      },
+      {
+        "id": "ax_20260302_092424.262_thevenin",
+        "name": "Thevenin Equivalent Theorem",
+        "domain": "power_supply",
+        "subdomain": "equivalent_circuit",
+        "computational_core": {
+          "type": "network_theorem",
+          "description": "任何線性有源二端網絡，對外電路可用一個電壓源與電阻串聯組合等效",
+          "form": {
+            "V_th": "V_oc = 開路電壓",
+            "R_th": "R_in = 所有獨立源置零後的等效電阻（電壓源短路、電流源開路）"
+          },
+          "equivalent_circuit": "V_th 串聯 R_th",
+          "applicability": "僅適用於線性有源二端網絡",
+          "note": "戴維南等效只對外電路等效，對內電路不等效"
+        },
+        "input_signature": {
+          "required_vars": [
+            "V_oc",
+            "R_in"
+          ],
+          "optional_vars": []
+        },
+        "output_signature": {
+          "variable": "V_th",
+          "units": "V",
+          "R_th": "R_in"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "V_oc,R_in,V_th,R_th",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:24:24"
+      },
+      {
+        "id": "ax_20260302_092424.263_source_transform",
+        "name": "Voltage-Current Source Transformation",
+        "domain": "power_supply",
+        "subdomain": "equivalent_circuit",
+        "computational_core": {
+          "type": "source_equivalence",
+          "description": "電壓源與電流源可以等效變換，條件是對外電路產生相同的電壓電流關係",
+          "transformation_rules": [
+            {
+              "from": "voltage_source",
+              "to": "current_source",
+              "form": "I_s = V_s / R_s, R_s_parallel = R_s"
+            },
+            {
+              "from": "current_source",
+              "to": "voltage_source",
+              "form": "V_s = I_s × R_s, R_s_series = R_s"
+            }
+          ],
+          "note": "等效變換僅對外電路等效，內部功率不一定相等",
+          "constraints": [
+            "不相等的電壓源不允許並聯",
+            "不相等的電流源不允許串聯"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "V_s",
+            "I_s",
+            "R_s"
+          ],
+          "optional_vars": []
+        },
+        "output_signature": {
+          "variable": "equivalent",
+          "description": "變換後的等效電源"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "V_s,I_s,R_s",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:24:24"
+      }
+    ],
+    "quality_management": [
+      {
+        "id": "ax_20260302_094257.688_control_plan",
+        "name": "Control Plan (CP) Structure",
+        "domain": "quality_management",
+        "subdomain": "process_control",
+        "computational_core": {
+          "type": "quality_plan",
+          "description": "控制計劃是對產品和過程控制方法的文件化描述",
+          "components": [
+            {
+              "field": "基礎信息",
+              "items": [
+                "控制計劃編號",
+                "零件名稱/編號",
+                "更改等級",
+                "日期",
+                "跨功能小組成員"
+              ]
+            },
+            {
+              "field": "過程信息",
+              "items": [
+                "工序編號",
+                "工序名稱",
+                "生產設備"
+              ]
+            },
+            {
+              "field": "特性識別",
+              "items": [
+                "產品特性",
+                "過程特性",
+                "特殊特性分類(SC/CC)"
+              ]
+            },
+            {
+              "field": "控制方法",
+              "items": [
+                "規格/公差",
+                "量具/設備",
+                "抽樣頻率",
+                "樣本量",
+                "控制方法(SPC/防錯等)"
+              ]
+            },
+            {
+              "field": "反應計劃",
+              "items": [
+                "失控反應計劃",
+                "責任人"
+              ]
+            }
+          ],
+          "types": [
+            "樣件控制計劃",
+            "試生產控制計劃",
+            "量產控制計劃"
+          ],
+          "relationship": "控制計劃是PFMEA的輸出，PFMEA中的控制措施轉化為控制計劃的具體方法"
+        },
+        "input_signature": {
+          "required_vars": [
+            "process_flow",
+            "pfmea_results"
+          ],
+          "optional_vars": [
+            "special_chars"
+          ]
+        },
+        "output_signature": {
+          "variable": "control_plan",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "process,characteristic,control,reaction",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.687_dfmea_structure",
+        "name": "DFMEA Structure Analysis (AIAG & VDA 7-Step)",
+        "domain": "quality_management",
+        "subdomain": "dfmea",
+        "computational_core": {
+          "type": "structured_analysis",
+          "methodology": "AIAG & VDA 7步法",
+          "steps": [
+            {
+              "step": 1,
+              "name": "策劃與準備",
+              "activities": [
+                "定義項目邊界",
+                "確定FMEA項目計劃",
+                "填寫表頭"
+              ]
+            },
+            {
+              "step": 2,
+              "name": "結構分析",
+              "activities": [
+                "建立方塊圖/邊界圖",
+                "結構樹分析",
+                "識別更高/更低級別要素"
+              ],
+              "output": "結構樹"
+            },
+            {
+              "step": 3,
+              "name": "功能分析",
+              "activities": [
+                "參數圖(P圖)分析",
+                "功能結構樹",
+                "定義功能要求"
+              ],
+              "output": "功能網"
+            },
+            {
+              "step": 4,
+              "name": "失效分析",
+              "activities": [
+                "失效影響(FE)",
+                "失效模式(FM)",
+                "失效起因(FC)",
+                "失效鏈分析"
+              ],
+              "output": "失效網"
+            },
+            {
+              "step": 5,
+              "name": "風險分析",
+              "activities": [
+                "嚴重度(S)評估",
+                "頻度(O)評估",
+                "探測度(D)評估",
+                "措施優先級(AP)"
+              ],
+              "output": "風險矩陣"
+            },
+            {
+              "step": 6,
+              "name": "優化",
+              "activities": [
+                "制定優化措施",
+                "分配責任人",
+                "跟踪完成狀態"
+              ]
+            },
+            {
+              "step": 7,
+              "name": "結果文件化",
+              "activities": [
+                "報告編制",
+                "溝通"
+              ]
+            }
+          ],
+          "reference": "AIAG & VDA FMEA手冊"
+        },
+        "input_signature": {
+          "required_vars": [
+            "system_boundary"
+          ],
+          "optional_vars": [
+            "function_tree"
+          ]
+        },
+        "output_signature": {
+          "variable": "dfmea_structure",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "function,failure,effect,cause",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.687_fmea_rpn",
+        "name": "FMEA Risk Priority Number (RPN)",
+        "domain": "quality_management",
+        "subdomain": "fmea",
+        "computational_core": {
+          "type": "risk_assessment",
+          "form": "RPN = S × O × D",
+          "description": "風險優先數 = 嚴重度 × 發生度 × 探測度",
+          "factors": [
+            {
+              "name": "Severity (S)",
+              "description": "失效影響的嚴重程度",
+              "scale": "1-10",
+              "criteria": {
+                "1": "幾乎無影響",
+                "10": "安全風險，不符合法規"
+              }
+            },
+            {
+              "name": "Occurrence (O)",
+              "description": "失效發生的可能性",
+              "scale": "1-10",
+              "criteria": {
+                "1": "幾乎不可能",
+                "10": "幾乎必然發生"
+              }
+            },
+            {
+              "name": "Detection (D)",
+              "description": "探測失效的能力",
+              "scale": "1-10",
+              "criteria": {
+                "1": "幾乎肯定能探測",
+                "10": "無法探測"
+              }
+            }
+          ],
+          "limitations": [
+            "相同RPN值可能來自不同的S/O/D組合",
+            "未考慮各因子的權重差異"
+          ],
+          "improved_methods": [
+            "措施優先級AP",
+            "模糊FMEA",
+            "多準則決策"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "severity",
+            "occurrence",
+            "detection"
+          ]
+        },
+        "output_signature": {
+          "variable": "RPN",
+          "units": "dimensionless",
+          "range": [
+            1,
+            1000
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "S,O,D,RPN",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.689_failure_network",
+        "name": "Failure Network and Causal Chain Analysis",
+        "domain": "quality_management",
+        "subdomain": "root_cause_analysis",
+        "computational_core": {
+          "type": "causal_graph",
+          "structure": {
+            "失效影響(FE)": "上一級別要素或最終用戶受到的影響",
+            "失效模式(FM)": "關注要素的失效表現形式",
+            "失效起因(FC)": "下一級別要素或特性的失效原因"
+          },
+          "relationship": "FC → FM → FE",
+          "analysis_methods": [
+            {
+              "method": "5 Whys",
+              "description": "連續追問為什麼，找到根本原因"
+            },
+            {
+              "method": "魚骨圖",
+              "description": "從人機料法環測五個維度分析原因"
+            },
+            {
+              "method": "失效鏈分析",
+              "description": "追踪失效在各層級間的傳遞路徑"
+            }
+          ],
+          "applications": [
+            "根本原因分析(RCA)",
+            "糾正與預防措施(CAPA)",
+            "失效知識庫建立"
+          ],
+          "integration": "失效網是QFD-FMEA耦合的重要輸出，用於建立組織的失效知識庫"
+        },
+        "input_signature": {
+          "required_vars": [
+            "failure_mode"
+          ],
+          "optional_vars": [
+            "system_hierarchy"
+          ]
+        },
+        "output_signature": {
+          "variable": "causal_chain",
+          "type": "graph"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "FM,FE,FC,root_cause",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.688_fuzzy_fmea",
+        "name": "Fuzzy FMEA Risk Assessment",
+        "domain": "quality_management",
+        "subdomain": "advanced_fmea",
+        "computational_core": {
+          "type": "fuzzy_mcdm",
+          "description": "基於區間值直覺模糊集(IVIFS)和多準則決策的改進FMEA方法",
+          "improvements": [
+            "使用區間值表達專家的不確定性和猶豫度",
+            "引入風險因子權重(BCM方法)",
+            "使用TODIM方法考慮損失規避心理",
+            "考慮專家意見互動的HK模型"
+          ],
+          "membership_functions": {
+            "IVIFS": "A = {⟨x, [μ⁻(x), μ⁺(x)], [ν⁻(x), ν⁺(x)]⟩ | x ∈ X}",
+            "μ": "隸屬度區間",
+            "ν": "非隸屬度區間",
+            "π": "猶豫度 = 1 - μ⁺ - ν⁺"
+          },
+          "ranking_methods": [
+            {
+              "name": "CoCoSo",
+              "application": "技術特性優先級排序"
+            },
+            {
+              "name": "TODIM",
+              "application": "失效模式優先級排序",
+              "feature": "基於前景理論，考慮損失規避"
+            }
+          ],
+          "opinion_dynamics": {
+            "model": "Hegselmann-Krause (HK)",
+            "feature": "考慮競合關係下的專家意見演化"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "expert_evaluations"
+          ],
+          "optional_vars": [
+            "competition_state"
+          ]
+        },
+        "output_signature": {
+          "variable": "fuzzy_ranking",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "S,O,D,μ,ν,π",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.685_hoq_structure",
+        "name": "House of Quality (HOQ) Structure",
+        "domain": "quality_management",
+        "subdomain": "qfd",
+        "computational_core": {
+          "type": "matrix_structure",
+          "description": "質量屋是QFD的核心工具，將客戶需求轉化為技術特性",
+          "components": [
+            {
+              "part": "左牆",
+              "name": "顧客需求及其重要度",
+              "symbol": "CRi, wi",
+              "description": "客戶聲音(VOC)及其權重，由Kano模型或市場調研決定"
+            },
+            {
+              "part": "天花板",
+              "name": "工程措施/技術特性",
+              "symbol": "TCj",
+              "description": "為滿足客戶需求所需的產品或服務技術特性"
+            },
+            {
+              "part": "房間",
+              "name": "關係矩陣",
+              "symbol": "Rij",
+              "description": "技術特性與客戶需求之間的關聯強度，通常用1-3-9或1-3-5-7-9評分"
+            },
+            {
+              "part": "地板",
+              "name": "技術重要度",
+              "symbol": "Wj",
+              "description": "各技術特性的絕對重要度，由加權計算得出"
+            },
+            {
+              "part": "屋頂",
+              "name": "相關矩陣",
+              "symbol": "Corrjk",
+              "description": "技術特性之間的相互關係，正相關或負相關"
+            },
+            {
+              "part": "右牆",
+              "name": "市場競爭能力評估",
+              "symbol": "M",
+              "description": "與競爭對手的產品進行比較"
+            },
+            {
+              "part": "地下室",
+              "name": "技術競爭能力評估",
+              "symbol": "T",
+              "description": "技術水平的綜合評估"
+            }
+          ],
+          "reference": "VDA 4, AIAG & VDA FMEA"
+        },
+        "input_signature": {
+          "required_vars": [
+            "customer_requirements"
+          ],
+          "optional_vars": [
+            "competitor_data"
+          ]
+        },
+        "output_signature": {
+          "variable": "HOQ_matrix",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "CR,TC,R,W,Corr",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.687_pfmea",
+        "name": "Process FMEA (PFMEA) Analysis",
+        "domain": "quality_management",
+        "subdomain": "pfmea",
+        "computational_core": {
+          "type": "process_risk",
+          "description": "PFMEA用於分析製造或裝配過程中可能出現的失效",
+          "focus_areas": [
+            "人機料法環測（5M1E）",
+            "工序流程",
+            "設備參數",
+            "操作規範"
+          ],
+          "typical_failure_modes": [
+            "尺寸超差",
+            "外觀缺陷",
+            "裝配錯誤",
+            "漏工序",
+            "參數漂移"
+          ],
+          "process_characteristics": [
+            {
+              "type": "產品特性",
+              "description": "產品可測量的物理或化學屬性"
+            },
+            {
+              "type": "過程特性",
+              "description": "影響產品特性的過程參數"
+            }
+          ],
+          "control_methods": [
+            "統計過程控制(SPC)",
+            "防錯(Poka-yoke)",
+            "檢驗",
+            "自動監測"
+          ],
+          "output": "控制計劃(Control Plan)"
+        },
+        "input_signature": {
+          "required_vars": [
+            "process_flow",
+            "equipment_list"
+          ],
+          "optional_vars": [
+            "historical_defects"
+          ]
+        },
+        "output_signature": {
+          "variable": "pfmea_analysis",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "process,parameter,defect,control",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.686_qfd_competitiveness",
+        "name": "QFD Competitive Capability Index",
+        "domain": "quality_management",
+        "subdomain": "qfd",
+        "computational_core": {
+          "type": "capability_assessment",
+          "form": {
+            "market_competitiveness": "M = Σ wi × mi / (5 × Σ wi)",
+            "technical_competitiveness": "T = Σ Wj_norm × tj / 5",
+            "overall_competitiveness": "C = √(M × T)"
+          },
+          "description": "評估產品在市場和技術層面的競爭力",
+          "scales": {
+            "mi": "市場競爭能力評分（1-5分）：1=無競爭力，3=有競爭力，5=國際領先",
+            "tj": "技術競爭能力評分（1-5分）：1=技術落後，3=行業平均，5=國際領先"
+          },
+          "interpretation": {
+            "M>4": "市場競爭力強",
+            "T>4": "技術領先",
+            "C>0.8": "綜合競爭力強"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "customer_weights",
+            "market_scores",
+            "technical_weights",
+            "tech_scores"
+          ]
+        },
+        "output_signature": {
+          "variable": "competitive_indices",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "wi,mi,Wj,tj,M,T,C",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.686_qfd_weight",
+        "name": "QFD Technical Importance Weight Calculation",
+        "domain": "quality_management",
+        "subdomain": "qfd",
+        "computational_core": {
+          "type": "weighted_sum",
+          "form": "Wj = Σ (wi × Rij)",
+          "description": "技術特性j的絕對重要度 = 各客戶需求權重與關係強度的乘積之和",
+          "normalized_form": "Wj_norm = Wj / Σ Wj",
+          "variables": {
+            "Wj": "技術特性j的絕對重要度",
+            "wi": "客戶需求i的權重（通常1-5分）",
+            "Rij": "技術特性j與客戶需求i的關係強度（1-3-9或1-3-5-7-9）"
+          },
+          "scoring_rules": {
+            "1": "微弱影響",
+            "3": "一般影響",
+            "5": "較強影響",
+            "7": "強影響",
+            "9": "非常強的影響"
+          },
+          "application": "將客戶需求量化為工程指標，識別關鍵質量特性(CTQs)"
+        },
+        "input_signature": {
+          "required_vars": [
+            "customer_weights",
+            "relationship_matrix"
+          ],
+          "optional_vars": [
+            "normalize"
+          ]
+        },
+        "output_signature": {
+          "variable": "Wj",
+          "type": "array"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "wi,Rij,Wj",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.688_qfd_fmea_coupling",
+        "name": "QFD-FMEA Integration Logic",
+        "domain": "quality_management",
+        "subdomain": "integrated_methods",
+        "computational_core": {
+          "type": "bidirectional_coupling",
+          "description": "QFD與FMEA的參數化耦合，實現正向設計與逆向風險阻斷的集成",
+          "coupling_elements": [
+            {
+              "qfd_output": "技術特性目標值與公差",
+              "fmea_input": "功能要求(Requirement)",
+              "logic": "FMEA的功能描述必須引用QFD設定的參數區間，凡是偏離該區間的狀態即定義為失效模式"
+            },
+            {
+              "qfd_output": "技術重要度Wj",
+              "fmea_input": "嚴重度(Severity)",
+              "logic": "QFD中權重得分前20%的特性，在FMEA中對應的失效後果嚴重度不得低於8分"
+            },
+            {
+              "qfd_output": "屋頂負相關矩陣",
+              "fmea_input": "失效起因(Cause)",
+              "logic": "QFD屋頂標識為強負相關的參數衝突，必須在FMEA中被識別為核心失效起因"
+            },
+            {
+              "qfd_output": "高重要度參數",
+              "fmea_input": "特殊特性識別",
+              "logic": "QFD高Wj + FMEA高S = 特殊特性(SC/CC)"
+            }
+          ],
+          "benefits": [
+            "來源合規性：特殊特性有據可查",
+            "工程一致性：設計目標與風險控制對齊",
+            "資源優化：將資源集中於高風險高重要度領域"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "qfd_results",
+            "fmea_results"
+          ],
+          "optional_vars": [
+            "thresholds"
+          ]
+        },
+        "output_signature": {
+          "variable": "integrated_analysis",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Wj,S,Corr,SC",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.689_qlm_principles",
+        "name": "Quality Lifecycle Management (QLM) Principles",
+        "domain": "quality_management",
+        "subdomain": "quality_system",
+        "computational_core": {
+          "type": "management_framework",
+          "description": "基於特徵驅動的質量生命周期管理",
+          "principles": [
+            {
+              "id": 1,
+              "name": "質量由特徵推動",
+              "description": "特徵是系統行為層面可測量、可控制的具體特點，將客戶需求轉化為特徵使質量變得切實且易於管理"
+            },
+            {
+              "id": 2,
+              "name": "質量實現",
+              "description": "基於積累的最佳實踐和學到的經驗對產品和流程進行設計、驗證和控制"
+            },
+            {
+              "id": 3,
+              "name": "質量定義",
+              "description": "如果沒有系統的質量規劃流程，糾正措施等同於試錯法"
+            },
+            {
+              "id": 4,
+              "name": "生命周期法",
+              "description": "質量是跨職能的，需要共同的語言、合規單、無縫接入和交流"
+            },
+            {
+              "id": 5,
+              "name": "積極的知識管理",
+              "description": "確保企業能夠積極利用所有作為經驗教訓而獲得的特徵"
+            }
+          ],
+          "core_activities": [
+            "QFD (顧客心聲)",
+            "DFMEA",
+            "設計驗證",
+            "設計規則管理",
+            "過程流程圖",
+            "PFMEA",
+            "控制計劃",
+            "作業指導",
+            "根本原因分析"
+          ],
+          "knowledge_loop": "特徵庫 → 設計應用 → 經驗反饋 → 特徵庫更新",
+          "reference": "Quality Lifecycle Management"
+        },
+        "input_signature": {
+          "required_vars": [
+            "quality_data"
+          ],
+          "optional_vars": [
+            "lessons_learned"
+          ]
+        },
+        "output_signature": {
+          "variable": "qlm_framework",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "feature,process,knowledge",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      },
+      {
+        "id": "ax_20260302_094257.688_special_chars",
+        "name": "Special Characteristics Identification (SC/CC)",
+        "domain": "quality_management",
+        "subdomain": "risk_classification",
+        "computational_core": {
+          "type": "characteristic_classification",
+          "description": "基於QFD與FMEA耦合結果識別特殊特性",
+          "identification_logic": {
+            "qfd_contribution": "QFD中技術重要度Wj排名前20%的參數",
+            "fmea_risk": "FMEA中嚴重度S≥8的失效對應的特性",
+            "coupling_rule": "QFD高權重 + FMEA高嚴重度 = 特殊特性"
+          },
+          "categories": [
+            {
+              "symbol": "CC",
+              "name": "關鍵特性",
+              "description": "影響安全或法規符合性的特性",
+              "criteria": "嚴重度S=9-10"
+            },
+            {
+              "symbol": "SC",
+              "name": "重要特性",
+              "description": "影響功能、性能或裝配的特性",
+              "criteria": "嚴重度S=5-8"
+            },
+            {
+              "symbol": "OS",
+              "name": "一般特性",
+              "description": "不影響主要功能的特性"
+            }
+          ],
+          "documentation": "特殊特性清單需在控制計劃、作業指導書中明確標識",
+          "reference": "IATF 16949"
+        },
+        "input_signature": {
+          "required_vars": [
+            "qfd_weights",
+            "fmea_severities"
+          ],
+          "optional_vars": [
+            "threshold"
+          ]
+        },
+        "output_signature": {
+          "variable": "special_characteristics",
+          "type": "array"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Wj,S,SC,CC",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:42:57"
+      }
+    ],
+    "quantum": [
+      {
+        "id": "ax_20260302_085255.841_heisenberg",
+        "name": "Heisenberg Uncertainty Principle",
+        "domain": "quantum",
+        "subdomain": "fundamental",
+        "computational_core": {
+          "type": "uncertainty",
+          "form": "Δx·Δp ≥ ℏ/2",
+          "constants": {
+            "ℏ": 1.054e-34
+          },
+          "free_parameters": [
+            "Δx",
+            "Δp"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "Δx",
+            "Δp"
+          ]
+        },
+        "output_signature": {
+          "variable": "uncertainty",
+          "units": "J·s"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Δx,Δp,ℏ",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      },
+      {
+        "id": "ax_20260302_085255.841_planck",
+        "name": "Planck Relation",
+        "domain": "quantum",
+        "subdomain": "wave_particle",
+        "computational_core": {
+          "type": "energy_frequency",
+          "form": "E = h·f",
+          "constants": {
+            "h": 6.626e-34
+          },
+          "free_parameters": [
+            "f"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "f"
+          ]
+        },
+        "output_signature": {
+          "variable": "E",
+          "units": "J"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "f,E,h",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      },
+      {
+        "id": "ax_20260302_085255.840_schrodinger",
+        "name": "Schrödinger Equation (Time-Independent)",
+        "domain": "quantum",
+        "subdomain": "wave_mechanics",
+        "computational_core": {
+          "type": "wave_equation",
+          "form": "H·ψ = E·ψ",
+          "free_parameters": [
+            "H",
+            "ψ"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "H",
+            "ψ"
+          ]
+        },
+        "output_signature": {
+          "variable": "E",
+          "units": "J"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "H,ψ,E",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      }
+    ],
+    "semiconductor": [
+      {
+        "id": "ax_20260302_085255.838_bandgap",
+        "name": "Band Gap Energy",
+        "domain": "semiconductor",
+        "subdomain": "material_property",
+        "computational_core": {
+          "type": "bandgap",
+          "form": "E_g = h·c/λ",
+          "constants": {
+            "h": 6.626e-34,
+            "c": 300000000.0
+          },
+          "free_parameters": [
+            "λ"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "λ"
+          ]
+        },
+        "output_signature": {
+          "variable": "E_g",
+          "units": "J"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "λ,E_g,h,c",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      },
+      {
+        "id": "ax_20260302_085255.840_mobility",
+        "name": "Carrier Mobility",
+        "domain": "semiconductor",
+        "subdomain": "transport",
+        "computational_core": {
+          "type": "mobility",
+          "form": "μ = v_d/E",
+          "free_parameters": [
+            "v_d",
+            "E"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "v_d",
+            "E"
+          ]
+        },
+        "output_signature": {
+          "variable": "μ",
+          "units": "cm²/V·s"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "v_d,E,μ",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      },
+      {
+        "id": "ax_20260302_085255.839_carrier",
+        "name": "Intrinsic Carrier Concentration",
+        "domain": "semiconductor",
+        "subdomain": "statistics",
+        "computational_core": {
+          "type": "carrier",
+          "form": "n_i = √(N_c·N_v)·e^(-E_g/(2k_B·T))",
+          "constants": {
+            "k_B": 1.38e-23
+          },
+          "free_parameters": [
+            "N_c",
+            "N_v",
+            "E_g",
+            "T"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "N_c",
+            "N_v",
+            "E_g",
+            "T"
+          ]
+        },
+        "output_signature": {
+          "variable": "n_i",
+          "units": "cm⁻³"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "N_c,N_v,E_g,T,n_i,k_B",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      },
+      {
+        "id": "ax_20260302_085255.838_diode",
+        "name": "Shockley Diode Equation",
+        "domain": "semiconductor",
+        "subdomain": "device",
+        "computational_core": {
+          "type": "diode",
+          "form": "I = I_s·(e^(V/(n·V_T)) - 1)",
+          "constants": {
+            "V_T": 0.026
+          },
+          "free_parameters": [
+            "I_s",
+            "V",
+            "n"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "V"
+          ],
+          "optional_vars": [
+            "I_s",
+            "n"
+          ]
+        },
+        "output_signature": {
+          "variable": "I",
+          "units": "A"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "V,I,I_s,n,V_T",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      }
+    ],
+    "statistics": [
+      {
+        "id": "ax_20260302_091636.478_atr",
+        "name": "Average True Range (ATR)",
+        "domain": "statistics",
+        "subdomain": "volatility",
+        "computational_core": {
+          "type": "volatility",
+          "form": "ATR_t = EMA_n(TR_t)",
+          "TR_formula": "TR = max(H - L, |H - C_prev|, |L - C_prev|)",
+          "description": "真實區間取移動平均，衡量市場波動程度",
+          "default_parameters": {
+            "n": 14
+          },
+          "interpretation": "ATR上升表示波動加大，下降表示波動減小"
+        },
+        "input_signature": {
+          "required_vars": [
+            "H_series",
+            "L_series",
+            "C_series"
+          ],
+          "optional_vars": [
+            "n"
+          ]
+        },
+        "output_signature": {
+          "variable": "ATR",
+          "units": "same as price"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "H,L,C,n,ATR,TR",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:16:36"
+      },
+      {
+        "id": "ax_20260302_091636.478_bbands",
+        "name": "Bollinger Bands",
+        "domain": "statistics",
+        "subdomain": "volatility",
+        "computational_core": {
+          "type": "envelope",
+          "form": {
+            "middle": "SMA_n(P)",
+            "upper": "SMA_n(P) + k·σ",
+            "lower": "SMA_n(P) - k·σ"
+          },
+          "σ_formula": "σ = √[ Σ(P_i - SMA)² / n ]",
+          "default_parameters": {
+            "n": 20,
+            "k": 2
+          },
+          "description": "以移動平均為中軌，上下軌為標準差倍數的通道",
+          "interpretation": "價格觸及上下軌可能反轉，通道寬度反映波動率"
+        },
+        "input_signature": {
+          "required_vars": [
+            "P_series"
+          ],
+          "optional_vars": [
+            "n",
+            "k"
+          ]
+        },
+        "output_signature": {
+          "variable": "BBands",
+          "components": [
+            "middle",
+            "upper",
+            "lower"
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P,n,k,σ,middle,upper,lower",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:16:36"
+      },
+      {
+        "id": "ax_20260302_091636.476_ema",
+        "name": "Exponential Moving Average (EMA)",
+        "domain": "statistics",
+        "subdomain": "moving_average",
+        "computational_core": {
+          "type": "smoothing",
+          "form": "EMA_t = α·P_t + (1-α)·EMA_{t-1}",
+          "alpha_formula": "α = 2/(n+1)",
+          "description": "指數移動平均，對近期數據賦予更高權重",
+          "free_parameters": [
+            "n",
+            "P_t"
+          ],
+          "properties": {
+            "lag": "小於SMA",
+            "weighting": "指數遞減權重"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "P_series"
+          ],
+          "optional_vars": [
+            "n"
+          ]
+        },
+        "output_signature": {
+          "variable": "EMA",
+          "units": "same as price",
+          "interpretation": "對價格變化更敏感的趨勢線"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P,n,EMA,α",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:16:36"
+      },
+      {
+        "id": "ax_20260302_091636.477_macd",
+        "name": "MACD (Moving Average Convergence Divergence)",
+        "domain": "statistics",
+        "subdomain": "oscillator",
+        "computational_core": {
+          "type": "momentum",
+          "form": {
+            "MACD_line": "EMA_12(P) - EMA_26(P)",
+            "signal_line": "EMA_9(MACD_line)",
+            "histogram": "MACD_line - signal_line"
+          },
+          "default_parameters": {
+            "fast": 12,
+            "slow": 26,
+            "signal": 9
+          },
+          "description": "MACD線為快慢EMA差，信號線為MACD的EMA，柱狀圖為兩者差",
+          "interpretation": {
+            "bullish": "MACD上穿信號線",
+            "bearish": "MACD下穿信號線",
+            "divergence": "價格與MACD背離預示反轉"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "P_series"
+          ],
+          "optional_vars": [
+            "fast",
+            "slow",
+            "signal"
+          ]
+        },
+        "output_signature": {
+          "variable": "MACD",
+          "units": "same as price",
+          "components": [
+            "MACD_line",
+            "signal_line",
+            "histogram"
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P,fast,slow,signal,MACD_line,signal_line,histogram",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:16:36"
+      },
+      {
+        "id": "ax_20260302_091636.478_obv",
+        "name": "On-Balance Volume (OBV)",
+        "domain": "statistics",
+        "subdomain": "volume",
+        "computational_core": {
+          "type": "cumulative",
+          "form": "OBV_t = OBV_{t-1} + { +V_t if C_t > C_{t-1}; -V_t if C_t < C_{t-1}; 0 if C_t = C_{t-1} }",
+          "description": "累積成交量指標，反映資金流向",
+          "interpretation": "OBV與價格同步上升確認趨勢，背離預示反轉"
+        },
+        "input_signature": {
+          "required_vars": [
+            "C_series",
+            "V_series"
+          ]
+        },
+        "output_signature": {
+          "variable": "OBV",
+          "units": "volume units"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "C,V,OBV",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:16:36"
+      },
+      {
+        "id": "ax_20260302_091636.477_rsi",
+        "name": "Relative Strength Index (RSI)",
+        "domain": "statistics",
+        "subdomain": "oscillator",
+        "computational_core": {
+          "type": "momentum",
+          "form": "RSI = 100 - 100/(1 + RS)",
+          "RS_formula": "RS = (平均漲幅) / (平均跌幅)",
+          "avg_gain": "EMA of gains over n periods",
+          "avg_loss": "EMA of losses over n periods",
+          "default_parameters": {
+            "n": 14
+          },
+          "thresholds": {
+            "overbought": 70,
+            "oversold": 30
+          },
+          "description": "衡量價格變動的速度和幅度，0-100區間"
+        },
+        "input_signature": {
+          "required_vars": [
+            "P_series"
+          ],
+          "optional_vars": [
+            "n"
+          ]
+        },
+        "output_signature": {
+          "variable": "RSI",
+          "units": "dimensionless",
+          "range": [
+            0,
+            100
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P,n,RSI,RS",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:16:36"
+      },
+      {
+        "id": "ax_20260302_091636.475_sma",
+        "name": "Simple Moving Average (SMA)",
+        "domain": "statistics",
+        "subdomain": "moving_average",
+        "computational_core": {
+          "type": "smoothing",
+          "form": "SMA_n(t) = (P_{t-n+1} + P_{t-n+2} + ... + P_t) / n",
+          "description": "n週期簡單移動平均，對所有數據點賦予相同權重",
+          "free_parameters": [
+            "n",
+            "P_t"
+          ],
+          "properties": {
+            "lag": "(n-1)/2 個週期",
+            "weighting": "等權重"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "P_series"
+          ],
+          "optional_vars": [
+            "n"
+          ]
+        },
+        "output_signature": {
+          "variable": "SMA",
+          "units": "same as price",
+          "interpretation": "平滑後的趨勢線"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P,n,SMA",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:16:36"
+      },
+      {
+        "id": "ax_20260302_091636.479_stoch",
+        "name": "Stochastic Oscillator",
+        "domain": "statistics",
+        "subdomain": "oscillator",
+        "computational_core": {
+          "type": "momentum",
+          "form": {
+            "%K": "100 × (C - L_n) / (H_n - L_n)",
+            "%D": "SMA_3(%K)"
+          },
+          "description": "比較收盤價與一定期間內價格範圍的位置",
+          "default_parameters": {
+            "n": 14,
+            "smoothing": 3
+          },
+          "thresholds": {
+            "overbought": 80,
+            "oversold": 20
+          },
+          "interpretation": "%K上穿%D且低於20為買入信號，高於80下穿為賣出信號"
+        },
+        "input_signature": {
+          "required_vars": [
+            "C_series",
+            "H_series",
+            "L_series"
+          ],
+          "optional_vars": [
+            "n",
+            "smoothing"
+          ]
+        },
+        "output_signature": {
+          "variable": "Stoch",
+          "components": [
+            "K",
+            "D"
+          ],
+          "range": [
+            0,
+            100
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "C,H,L,n,sm,K,D",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:16:36"
+      },
+      {
+        "id": "ax_20260302_091636.476_wma",
+        "name": "Weighted Moving Average (WMA)",
+        "domain": "statistics",
+        "subdomain": "moving_average",
+        "computational_core": {
+          "type": "smoothing",
+          "form": "WMA_n(t) = (n·P_t + (n-1)·P_{t-1} + ... + 1·P_{t-n+1}) / (n(n+1)/2)",
+          "description": "加權移動平均，線性遞增權重",
+          "free_parameters": [
+            "n",
+            "P_t"
+          ],
+          "properties": {
+            "weighting": "線性遞增權重，最近期權重最高"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "P_series"
+          ],
+          "optional_vars": [
+            "n"
+          ]
+        },
+        "output_signature": {
+          "variable": "WMA",
+          "units": "same as price"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P,n,WMA",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:16:36"
+      }
+    ],
+    "substrate": [
+      {
+        "id": "ax_20260302_092825.446_abf",
+        "name": "Ajinomoto Build-up Film (ABF) Properties",
+        "domain": "substrate",
+        "subdomain": "build_up_material",
+        "computational_core": {
+          "type": "dielectric",
+          "description": "ABF是高階FCBGA基板的主流增層介電材料",
+          "key_properties": {
+            "fine_line_capability": "支援 ≤10μm 線寬/線距",
+            "low_roughness": "減少傳輸損耗",
+            "photo_sensitivity": "支援雷射鑽孔",
+            "thermal_stability": "可承受多次回流焊"
+          },
+          "application": "CPU/GPU等高階覆晶封裝",
+          "stack_up_example": "核心 + 多層ABF增層",
+          "typical_suppliers": [
+            "Ajinomoto",
+            "Taiyo Ink",
+            "Sekisui"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "line_width"
+          ],
+          "optional_vars": [
+            "frequency"
+          ]
+        },
+        "output_signature": {
+          "variable": "suitable",
+          "type": "boolean",
+          "condition": "line_width ≤ 10μm"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "line_width,line_space,Dk,Df",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.446_ceramic",
+        "name": "Ceramic Substrate Properties",
+        "domain": "substrate",
+        "subdomain": "ceramic",
+        "computational_core": {
+          "type": "inorganic_substrate",
+          "materials": [
+            {
+              "name": "氧化鋁 (Al₂O₃)",
+              "thermal_conductivity": "24-28 W/m·K",
+              "CTE": "6-8 ppm/°C",
+              "advantages": "低成本、廣泛使用",
+              "limitations": "導熱率中等"
+            },
+            {
+              "name": "氮化鋁 (AlN)",
+              "thermal_conductivity": ">170 W/m·K",
+              "CTE": "4.5 ppm/°C",
+              "advantages": "高導熱、與矽CTE匹配",
+              "limitations": "成本較高"
+            }
+          ],
+          "processing": {
+            "DBC": "直接敷銅技術，用於功率模組",
+            "DPC": "直接電鍍銅，用於精細線路",
+            "thick_film": "厚膜印刷，用於混合電路"
+          },
+          "advantages": [
+            "工作溫度可達350°C",
+            "低膨脹係數",
+            "高頻性能優異",
+            "氣密封裝(吸水率0%)"
+          ],
+          "applications": [
+            "高功率LED",
+            "功率器件",
+            "微波器件",
+            "汽車電子",
+            "航天電子"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "power_density",
+            "frequency"
+          ],
+          "optional_vars": [
+            "temperature"
+          ]
+        },
+        "output_signature": {
+          "variable": "recommended_material",
+          "type": "string"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "thermal_conductivity,CTE,power_density",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.448_chip_substrate_failure",
+        "name": "Chip-Substrate Composite Failure Modes",
+        "domain": "substrate",
+        "subdomain": "reliability",
+        "computational_core": {
+          "type": "failure_analysis",
+          "failure_modes": [
+            {
+              "name": "晶片破裂",
+              "mechanism": "熱應力導致矽晶片破裂",
+              "analysis": "ball-on-ring/ball-on-edge測試",
+              "model": "機率失效模型"
+            },
+            {
+              "name": "基板破裂",
+              "mechanism": "CTE不匹配導致陶瓷或有機基板破裂",
+              "observation": "溫度循環後導通電阻上升"
+            },
+            {
+              "name": "介面分層",
+              "mechanism": "不同材料介面剝離",
+              "test": "掃描聲學顯微鏡"
+            }
+          ],
+          "design_factors": {
+            "interposer_thickness": "150μm CIC interposer 可將失效機率從8.6%降至0.016%",
+            "substrate_material": "硬銅 vs 軟銅影響失效機率(12% vs 52%)",
+            "sintering_process": "單步燒結 vs 多步"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "material_stack",
+            "temp_cycle_range"
+          ],
+          "optional_vars": [
+            "process_type"
+          ]
+        },
+        "output_signature": {
+          "variable": "failure_probability",
+          "type": "float"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "CTE,thickness,failure_rate",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.446_core_materials",
+        "name": "Core Material Properties (BT/FR-4)",
+        "domain": "substrate",
+        "subdomain": "material_property",
+        "computational_core": {
+          "type": "material_database",
+          "materials": [
+            {
+              "name": "BT (Bismaleimide Triazine)",
+              "Tg_DMA": "280°C",
+              "Td_5%": ">400°C",
+              "CTE_X_Y": "10 ppm/°C",
+              "CTE_Z_α1_α2": "25/135 ppm/°C",
+              "Dk_1GHz": 4.4,
+              "Df_1GHz": 0.007,
+              "peel_strength": "0.80 N/mm",
+              "young_modulus_50C": "26 GPa",
+              "young_modulus_200C": "23 GPa",
+              "water_absorption": "0.14%",
+              "thermal_conductivity": "0.61 W/m·K",
+              "flammability": "V-0",
+              "application": "BGA基板標準材料，比FR-4性能更好"
+            },
+            {
+              "name": "FR-4",
+              "Tg": "130-180°C",
+              "CTE": "14-17 ppm/°C",
+              "Dk_1MHz": "4.0-4.5",
+              "Df_1MHz": "0.02",
+              "application": "低成本通用基板"
+            }
+          ],
+          "selection_criteria": [
+            {
+              "parameter": "Tg",
+              "rule": "回流焊溫度需低於Tg，避免板彎"
+            },
+            {
+              "parameter": "CTE",
+              "rule": "需與矽晶片CTE(3-5 ppm/°C)匹配，減少熱應力"
+            },
+            {
+              "parameter": "Dk/Df",
+              "rule": "高頻應用需低Dk/Df減少訊號損失"
+            }
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "material_name"
+          ],
+          "optional_vars": [
+            "frequency",
+            "temperature"
+          ]
+        },
+        "output_signature": {
+          "variable": "material_properties",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Tg,CTE,Dk,Df,thermal_conductivity",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.447_fc_substrate",
+        "name": "Flip-Chip Substrate Requirements",
+        "domain": "substrate",
+        "subdomain": "assembly",
+        "computational_core": {
+          "type": "design_rules",
+          "bump_pitch_categories": [
+            {
+              "pitch": ">150μm",
+              "substrate_type": "有機基板",
+              "line_space": ">20μm"
+            },
+            {
+              "pitch": "<100μm",
+              "substrate_type": "矽中介層",
+              "line_space": "<10μm"
+            },
+            {
+              "pitch": "<40μm",
+              "substrate_type": "先進節點",
+              "line_space": "≤2μm"
+            }
+          ],
+          "key_requirements": [
+            "高密度佈線 (sub-10μm 線寬/線距)",
+            "低翹曲 (<0.1%) 確保凸塊連接可靠性",
+            "underfill相容性",
+            "表面處理: ENEPIG 或 ENIG"
+          ],
+          "fc_vs_wb": {
+            "flip_chip": "面積陣列、高密度、短路徑",
+            "wire_bond": "周邊排列、低密度、長路徑"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "bump_pitch"
+          ],
+          "optional_vars": [
+            "io_count"
+          ]
+        },
+        "output_signature": {
+          "variable": "substrate_type",
+          "type": "string"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "pitch,line_width,line_space,warpage",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.447_high_speed",
+        "name": "High-Speed Signal Design Rules",
+        "domain": "substrate",
+        "subdomain": "signal_integrity",
+        "computational_core": {
+          "type": "design_guidelines",
+          "controlled_impedance": {
+            "single_ended": "50Ω ±10%",
+            "differential": "85-100Ω ±10%"
+          },
+          "low_loss_materials": {
+            "condition": "頻率 > 10GHz",
+            "Dk_requirement": "穩定、低變異",
+            "Df_requirement": "<0.005"
+          },
+          "via_design": {
+            "microvia": "用於高密度互連",
+            "back_drill": "減少殘樁(stub)效應",
+            "rule": "stub_length < 訊號上升時間對應的電氣長度的1/10"
+          },
+          "return_path": {
+            "continuous_ground": "避免參考平面中斷",
+            "stitching_vias": "換層時需加地過孔"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "frequency",
+            "rise_time"
+          ],
+          "optional_vars": [
+            "target_impedance"
+          ]
+        },
+        "output_signature": {
+          "variable": "design_rules",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "frequency,Z0,Dk,Df,stub_length",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.447_interposer",
+        "name": "Interposer Technologies for 2.5D/3D Integration",
+        "domain": "substrate",
+        "subdomain": "advanced_packaging",
+        "computational_core": {
+          "type": "integration_platform",
+          "types": [
+            {
+              "name": "矽中介層",
+              "line_space": "<10μm",
+              "via": "TSV (矽穿孔)",
+              "advantages": "最高密度、CTE匹配",
+              "cost": "高"
+            },
+            {
+              "name": "有機中介層",
+              "line_space": "10-20μm",
+              "via": "microvia",
+              "advantages": "成本較低、製程成熟",
+              "cost": "中"
+            },
+            {
+              "name": "玻璃中介層",
+              "line_space": "10-15μm",
+              "via": "TGV (玻璃穿孔)",
+              "advantages": "CTE可調、高頻特性佳",
+              "cost": "中高"
+            }
+          ],
+          "chiplet_interconnects": [
+            {
+              "standard": "UCIe",
+              "bandwidth": "高",
+              "power_efficiency": "低功耗"
+            },
+            {
+              "standard": "BoW",
+              "application": "成本敏感應用"
+            }
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "density_requirement",
+            "cost_target"
+          ],
+          "optional_vars": [
+            "frequency"
+          ]
+        },
+        "output_signature": {
+          "variable": "recommended_interposer",
+          "type": "string"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "line_space,TSV_density,bandwidth",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.448_microvia",
+        "name": "Microvia and Blind/Buried Via Design",
+        "domain": "substrate",
+        "subdomain": "via_technology",
+        "computational_core": {
+          "type": "via_classification",
+          "via_types": [
+            {
+              "name": "通孔",
+              "description": "貫穿整個PCB",
+              "aspect_ratio": "≤12:1",
+              "application": "通用連接"
+            },
+            {
+              "name": "盲孔",
+              "description": "連接外層與內層",
+              "laser_drilling": "CO2或UV雷射",
+              "application": "高密度互連"
+            },
+            {
+              "name": "埋孔",
+              "description": "完全埋在內層",
+              "application": "節省表面空間"
+            },
+            {
+              "name": "微孔",
+              "description": "直徑 ≤150μm",
+              "typical_diameter": "75-100μm",
+              "land_diameter": "175-200μm",
+              "application": "HDI板、IC載板"
+            }
+          ],
+          "reliability_factors": [
+            "縱橫比 (aspect ratio)",
+            "銅鍍層均勻性",
+            "應力集中"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "layer_count",
+            "density"
+          ],
+          "optional_vars": [
+            "via_diameter"
+          ]
+        },
+        "output_signature": {
+          "variable": "via_type",
+          "type": "string"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "via_diameter,aspect_ratio,land_size",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.445_organic_class",
+        "name": "Organic Substrate Classification",
+        "domain": "substrate",
+        "subdomain": "material_class",
+        "computational_core": {
+          "type": "classification",
+          "description": "有機基板可分為積層型(Laminate)與增層型(Build-up)兩大類",
+          "laminate": {
+            "definition": "由多層薄型積層材料堆疊而成，中間有雙面銅箔",
+            "core_material": "FR-4（環氧樹脂）、BT（雙馬來醯亞胺三嗪）",
+            "via_types": [
+              "通孔",
+              "盲孔",
+              "埋孔"
+            ],
+            "layer_count": "2/4/6/8+層",
+            "application": "低成本的線焊BGA封裝",
+            "typical_cost": "低"
+          },
+          "build_up": {
+            "definition": "在厚核心兩側對稱增加薄型非強化環氧層",
+            "structure": "例如 1+2+1 表示 1層增層 + 2層核心 + 1層增層",
+            "core_thickness": "200-1200μm，標準800μm",
+            "application": "高密度互連、細間距覆晶封裝",
+            "typical_cost": "中高"
+          },
+          "reference": "IPC-6015, IPC-4104"
+        },
+        "input_signature": {
+          "required_vars": [
+            "application_type"
+          ],
+          "optional_vars": [
+            "layer_count",
+            "pitch"
+          ]
+        },
+        "output_signature": {
+          "variable": "substrate_type",
+          "type": "string",
+          "options": [
+            "laminate",
+            "build_up"
+          ]
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "layer_count,pitch,core_thickness",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.447_power_integrity",
+        "name": "Power Integrity Design",
+        "domain": "substrate",
+        "subdomain": "power_distribution",
+        "computational_core": {
+          "type": "pdn_design",
+          "target_impedance": "Z_target = (Vdd × ripple%) / ΔI",
+          "decoupling_strategy": {
+            "on_chip": "最有效，但面積受限",
+            "on_package": "次有效",
+            "on_board": "效果較差"
+          },
+          "loop_inductance": {
+            "definition": "電流迴路面積越小，電感越低",
+            "impact": "低迴路電感支援高di/dt",
+            "improvement": "使用矽核心基板可大幅降低"
+          },
+          "resonance": {
+            "phenomenon": "電源/地平面形成諧振腔",
+            "frequency": "取決於介質厚度與Dk",
+            "mitigation": "加去耦電容、改變諧振模式"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "Vdd",
+            "ripple_percent",
+            "ΔI"
+          ],
+          "optional_vars": [
+            "frequency"
+          ]
+        },
+        "output_signature": {
+          "variable": "Z_target",
+          "units": "Ω"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "Vdd,ripple,ΔI,Z_target,L_loop",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.446_silicon_core",
+        "name": "Silicon Core Substrate",
+        "domain": "substrate",
+        "subdomain": "advanced_substrate",
+        "computational_core": {
+          "type": "next_gen_substrate",
+          "description": "以矽為核心的先進基板，解決有機基板的厚度與翹曲問題",
+          "advantages_over_organic": [
+            {
+              "parameter": "厚度",
+              "organic": "800-1200μm",
+              "silicon_core": "可降低一個數量級",
+              "improvement": "10倍"
+            },
+            {
+              "parameter": "翹曲",
+              "organic": "CTE mismatch with silicon (3-5 ppm/°C)",
+              "silicon_core": "CTE完美匹配矽晶片",
+              "improvement": "顯著降低翹曲"
+            },
+            {
+              "parameter": "電源完整性",
+              "organic": "高迴路電感",
+              "silicon_core": "低迴路電感，支援大ΔI操作"
+            },
+            {
+              "parameter": "訊號完整性",
+              "organic": "有半波諧振",
+              "silicon_core": "消除半波諧振，支援更高頻率"
+            }
+          ],
+          "applications": [
+            "2.5D/3D整合",
+            "HBM",
+            "UCIe",
+            "高階伺服器"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "package_thickness",
+            "frequency"
+          ],
+          "optional_vars": [
+            "CTE_requirement"
+          ]
+        },
+        "output_signature": {
+          "variable": "silicon_core_benefit",
+          "type": "json"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "thickness,CTE,frequency,inductance",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      },
+      {
+        "id": "ax_20260302_092825.448_warpage",
+        "name": "Substrate Warpage Control",
+        "domain": "substrate",
+        "subdomain": "mechanical_reliability",
+        "computational_core": {
+          "type": "mechanical_model",
+          "causes": [
+            "CTE不匹配 (矽3-5 ppm/°C vs 有機基板14-17 ppm/°C)",
+            "固化收縮",
+            "溫度梯度"
+          ],
+          "mitigation": [
+            "對稱疊構 (build-up層數上下對稱)",
+            "核心材料選擇 (高Tg材料)",
+            "矽核心基板",
+            "應力釋放結構"
+          ],
+          "measurement": "shadow moiré, 三維掃描",
+          "acceptance_criteria": {
+            "BGA": "<100μm",
+            "LGA": "<80μm"
+          }
+        },
+        "input_signature": {
+          "required_vars": [
+            "package_size",
+            "layer_stack"
+          ],
+          "optional_vars": [
+            "CTE_mismatch"
+          ]
+        },
+        "output_signature": {
+          "variable": "warpage_risk",
+          "type": "string"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "CTE,package_size,warpage",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 09:28:25"
+      }
+    ],
+    "thermal": [
+      {
+        "id": "ax_20260302_160822_496ea5",
+        "name": "Fourier's Law (1D Steady-State)",
+        "domain": "thermal",
+        "subdomain": "conduction",
+        "computational_core": {
+          "type": "heat_conduction",
+          "form": "Q = k·A·ΔT/d"
+        },
+        "input_signature": {
+          "required_vars": [
+            "k",
+            "A",
+            "ΔT",
+            "d"
+          ]
+        },
+        "output_signature": {
+          "variable": "Q",
+          "units": "W"
+        },
+        "boundary_conditions": {},
+        "precision_requirements": {},
+        "xr_variables": "k,A,ΔT,d,Q",
+        "analogy_group": "",
+        "source": "",
+        "human_verified": 1,
+        "verified_date": "2025-01-01",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:08:22"
+      },
+      {
+        "id": "ax_20260302_161624_b9871f",
+        "name": "Fourier's Law (1D Steady-State)",
+        "domain": "thermal",
+        "subdomain": "conduction",
+        "computational_core": {
+          "type": "heat_conduction",
+          "form": "Q = k·A·ΔT/d"
+        },
+        "input_signature": {
+          "required_vars": [
+            "k",
+            "A",
+            "ΔT",
+            "d"
+          ]
+        },
+        "output_signature": {
+          "variable": "Q",
+          "units": "W"
+        },
+        "boundary_conditions": {},
+        "precision_requirements": {},
+        "xr_variables": "k,A,ΔT,d,Q",
+        "analogy_group": "",
+        "source": "",
+        "human_verified": 1,
+        "verified_date": "2025-01-01",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:16:24"
+      },
+      {
+        "id": "ax_20260302_082918.351_radiation",
+        "name": "Stefan-Boltzmann Law",
+        "domain": "thermal",
+        "subdomain": "radiation",
+        "computational_core": {
+          "type": "radiation",
+          "form": "P = ε·σ·A·T⁴",
+          "constants": {
+            "σ": 5.67e-08
+          },
+          "free_parameters": [
+            "ε",
+            "A",
+            "T"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "T"
+          ],
+          "optional_vars": [
+            "ε",
+            "A"
+          ]
+        },
+        "output_signature": {
+          "variable": "P",
+          "units": "W"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "ε,σ,A,T,P",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:29:18"
+      }
+    ],
+    "thermodynamics": [
+      {
+        "id": "ax_20260302_085255.837_carnot",
+        "name": "Carnot Efficiency",
+        "domain": "thermodynamics",
+        "subdomain": "heat_engine",
+        "computational_core": {
+          "type": "efficiency",
+          "form": "η = 1 - T_C/T_H",
+          "free_parameters": [
+            "T_C",
+            "T_H"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "T_C",
+            "T_H"
+          ]
+        },
+        "output_signature": {
+          "variable": "η",
+          "units": "dimensionless"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "T_C,T_H,η",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      },
+      {
+        "id": "ax_20260302_085255.836_entropy",
+        "name": "Entropy Definition",
+        "domain": "thermodynamics",
+        "subdomain": "second_law",
+        "computational_core": {
+          "type": "entropy",
+          "form": "ΔS = ∫ dQ/T",
+          "free_parameters": [
+            "dQ",
+            "T"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "dQ",
+            "T"
+          ]
+        },
+        "output_signature": {
+          "variable": "ΔS",
+          "units": "J/K"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "dQ,T,ΔS",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      },
+      {
+        "id": "ax_20260302_085255.838_heat_capacity",
+        "name": "Heat Capacity",
+        "domain": "thermodynamics",
+        "subdomain": "material_property",
+        "computational_core": {
+          "type": "heat_capacity",
+          "form": "Q = C·ΔT",
+          "free_parameters": [
+            "C",
+            "ΔT"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "C",
+            "ΔT"
+          ]
+        },
+        "output_signature": {
+          "variable": "Q",
+          "units": "J"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "C,ΔT,Q",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      },
+      {
+        "id": "ax_20260302_085255.835_ideal_gas",
+        "name": "Ideal Gas Law",
+        "domain": "thermodynamics",
+        "subdomain": "equation_of_state",
+        "computational_core": {
+          "type": "gas_law",
+          "form": "P·V = n·R·T",
+          "constants": {
+            "R": 8.314
+          },
+          "free_parameters": [
+            "P",
+            "V",
+            "n",
+            "T"
+          ]
+        },
+        "input_signature": {
+          "required_vars": [
+            "P",
+            "V",
+            "n",
+            "T"
+          ]
+        },
+        "output_signature": {
+          "variable": "n",
+          "units": "mol"
+        },
+        "boundary_conditions": null,
+        "precision_requirements": null,
+        "xr_variables": "P,V,n,T,R",
+        "analogy_group": null,
+        "source": null,
+        "human_verified": 1,
+        "verified_date": "2026-03-02",
+        "version": 1,
+        "embedding": null,
+        "created_at": "2026-03-02 08:52:55"
+      }
+    ]
+  }
+}

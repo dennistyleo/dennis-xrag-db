@@ -1,24 +1,63 @@
 {
-    "domain": "thermal",
-    "count": 3,
-    "axioms": [
-        {
-            "name": "Fourier's Law (1D Steady-State)",
-            "form": "Q = k\u00b7A\u00b7\u0394T/d",
-            "type": "heat_conduction",
-            "variables": "k,A,\u0394T,d,Q"
-        },
-        {
-            "name": "Fourier's Law (1D Steady-State)",
-            "form": "Q = k\u00b7A\u00b7\u0394T/d",
-            "type": "heat_conduction",
-            "variables": "k,A,\u0394T,d,Q"
-        },
-        {
-            "name": "Stefan-Boltzmann Law",
-            "form": "P = \u03b5\u00b7\u03c3\u00b7A\u00b7T\u2074",
-            "type": "radiation",
-            "variables": "\u03b5,\u03c3,A,T,P"
-        }
-    ]
+  "domain": "thermal",
+  "count": 3,
+  "axioms": [
+    {
+      "id": "ax_20260302_160822_496ea5",
+      "name": "Fourier's Law (1D Steady-State)",
+      "domain": "thermal",
+      "subdomain": "conduction",
+      "computational_core": "{\"type\": \"heat_conduction\", \"form\": \"Q = k\\u00b7A\\u00b7\\u0394T/d\"}",
+      "input_signature": "{\"required_vars\": [\"k\", \"A\", \"\\u0394T\", \"d\"]}",
+      "output_signature": "{\"variable\": \"Q\", \"units\": \"W\"}",
+      "boundary_conditions": "{}",
+      "precision_requirements": "{}",
+      "xr_variables": "k,A,ΔT,d,Q",
+      "analogy_group": "",
+      "source": "",
+      "human_verified": 1,
+      "verified_date": "2025-01-01",
+      "version": 1,
+      "embedding": null,
+      "created_at": "2026-03-02 08:08:22"
+    },
+    {
+      "id": "ax_20260302_161624_b9871f",
+      "name": "Fourier's Law (1D Steady-State)",
+      "domain": "thermal",
+      "subdomain": "conduction",
+      "computational_core": "{\"type\": \"heat_conduction\", \"form\": \"Q = k\\u00b7A\\u00b7\\u0394T/d\"}",
+      "input_signature": "{\"required_vars\": [\"k\", \"A\", \"\\u0394T\", \"d\"]}",
+      "output_signature": "{\"variable\": \"Q\", \"units\": \"W\"}",
+      "boundary_conditions": "{}",
+      "precision_requirements": "{}",
+      "xr_variables": "k,A,ΔT,d,Q",
+      "analogy_group": "",
+      "source": "",
+      "human_verified": 1,
+      "verified_date": "2025-01-01",
+      "version": 1,
+      "embedding": null,
+      "created_at": "2026-03-02 08:16:24"
+    },
+    {
+      "id": "ax_20260302_082918.351_radiation",
+      "name": "Stefan-Boltzmann Law",
+      "domain": "thermal",
+      "subdomain": "radiation",
+      "computational_core": "{\"type\": \"radiation\", \"form\": \"P = ε·σ·A·T⁴\", \"constants\": {\"σ\": 5.67e-8}, \"free_parameters\": [\"ε\", \"A\", \"T\"]}",
+      "input_signature": "{\"required_vars\": [\"T\"], \"optional_vars\": [\"ε\", \"A\"]}",
+      "output_signature": "{\"variable\": \"P\", \"units\": \"W\"}",
+      "boundary_conditions": null,
+      "precision_requirements": null,
+      "xr_variables": "ε,σ,A,T,P",
+      "analogy_group": null,
+      "source": null,
+      "human_verified": 1,
+      "verified_date": "2026-03-02",
+      "version": 1,
+      "embedding": null,
+      "created_at": "2026-03-02 08:29:18"
+    }
+  ]
 }
