@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AICHIP XRAG · Control Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/aichip-logo.png">
+    
+    <!-- Tailwind CSS (只取基礎樣式) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <style>
+        /* 純黑背景，極簡設計 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #FFFFFF;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.5;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+        
+        /* 導航列 - 極簡 */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #222;
+            margin-bottom: 2rem;
+        }
+        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-img {
+            height: 60px;           /* 明顯放大 */
+            width: auto;
+            object-fit: contain;
+        }
+        
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 400;
+            color: #888;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #111;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            border: 1px solid #222;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #00ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .status-text {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        
+        .refresh-btn {
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.5rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #222;
+            border-color: #555;
+        }
+        
+        /* 統計卡片 - 乾淨整齊 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .trend-up {
+            color: #00ff00;
+        }
+        
+        .trend-warning {
+            color: #ffaa00;
+        }
+        
+        /* 圖表與活動 - 雙欄 */
+        .row-2col {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .panel {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .panel-title i {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        /* 活動列表 */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        
+        .activity-name {
+            color: #eee;
+        }
+        
+        .activity-time {
+            color: #666;
+            font-size: 0.85rem;
+        }
+        
+        .view-all {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #888;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+        
+        .view-all:hover {
+            color: #fff;
+        }
+        
+        /* 待審 + 新增表單 - 雙欄 */
+        .row-2col-bottom {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* 待審項目 */
+        .pending-item {
+            background: #111;
+            border-left: 3px solid #ffaa00;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .pending-info h4 {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .pending-meta {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        
+        .pending-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-approve {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            color: #4caf50;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .btn-reject {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            color: #f44336;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        /* 表單 */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-label {
+            display: block;
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            padding: 0.75rem;
+            color: #fff;
+            font-family: inherit;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #444;
+        }
+        
+        .slider {
+            width: 100%;
+            margin: 0.5rem 0;
+            accent-color: #666;
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 0.8rem;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #ccc;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            padding: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* FPGA 區塊 - 可收縮 */
+        .fpga-section {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .fpga-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .fpga-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .fpga-title i {
+            color: #666;
+        }
+        
+        .fpga-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .fpga-stat {
+            text-align: center;
+        }
+        
+        .fpga-stat-value {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #fff;
+        }
+        
+        .fpga-stat-label {
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Chart 容器 - 乾淨 */
+        .chart-container {
+            width: 100%;
+            height: 250px;
+            position: relative;
+        }
+        
+        /* 顏色標籤只用於圖例，不用於品牌 */
+        .domain-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            color: #444;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- 導航列 - 乾淨簡潔 -->
+        <div class="navbar">
+            <div class="logo-area">
+                <img src="/static/aichip-logo.png" alt="AICHIP" class="logo-img">
+                <span class="logo-text">XRAG · Control</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span class="status-text">System Online</span>
+                </div>
+                <button onclick="refreshData()" class="refresh-btn">
+                    <i class="fas fa-sync-alt" style="margin-right: 0.5rem;"></i>Refresh
+                </button>
+            </div>
+        </div>
+        
+        <!-- 統計卡片 - 清楚易讀 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span>Total Axioms</span>
+                    <i class="far fa-folder-open" style="color:#666"></i>
+                </div>
+                <div class="stat-number" id="totalAxioms">136</div>
+                <div class="stat-footer">
+                    <span class="trend-up">↑ +12</span>
+                    <span>this month</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span>Frozen</span>
+                    <i class="far fa-snowflake" style="color:#666"></i>
+                </div>
+                <div class="stat-number" id="frozenAxioms">5</div>
+                <div class="stat-footer">
+                    <span class="trend-up">↑ +2</span>
+                    <span>today</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span>Pending</span>
+                    <i class="far fa-clock" style="color:#666"></i>
+                </div>
+                <div class="stat-number" id="pendingReviews">3</div>
+                <div class="stat-footer">
+                    <span class="trend-warning">1 high priority</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span>UPASL</span>
+                    <i class="fas fa-microchip" style="color:#666"></i>
+                </div>
+                <div class="stat-number" style="font-size: 2rem;">Active</div>
+                <div class="stat-footer">
+                    <span>2.3ms latency</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 圖表 + 活動記錄 (雙欄) -->
+        <div class="row-2col">
+            <!-- 圖表區 - 不使用品牌色 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="far fa-chart-pie"></i> Domain Distribution
+                </div>
+                <div class="chart-container">
+                    <canvas id="domainChart"></canvas>
+                </div>
+                <!-- 圖例用文字標示，清楚區別 -->
+                <div class="domain-legend">
+                    <div class="legend-item"><span class="legend-color" style="background:#5470c6;"></span> Thermal</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#91cc75;"></span> Electrical</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#fac858;"></span> Aging</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#ee6666;"></span> Quantum</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#73c0de;"></span> EMC</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#3ba272;"></span> Other</div>
+                </div>
+            </div>
+            
+            <!-- 活動記錄 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="far fa-history"></i> Recent Activity
+                </div>
+                <div id="recentActivities" class="activity-list">
+                    <!-- JS 動態載入 -->
+                </div>
+                <a href="#" class="view-all">View all activity →</a>
+            </div>
+        </div>
+        
+        <!-- 待審清單 + 新增表單 (雙欄) -->
+        <div class="row-2col-bottom">
+            <!-- 待審清單 -->
+            <div class="panel">
+                <div class="panel-title" style="justify-content: space-between;">
+                    <span><i class="far fa-clipboard"></i> Pending Review</span>
+                    <span style="background:#222; padding:0.2rem 0.8rem; border-radius:40px; font-size:0.8rem; color:#aaa;" id="pendingCount">3</span>
+                </div>
+                <div id="pendingList" style="max-height: 340px; overflow-y: auto;">
+                    <!-- JS 動態載入 -->
+                </div>
+                <button onclick="loadPendingReviews()" style="width:100%; background:#111; border:1px solid #333; color:#ccc; padding:0.75rem; border-radius:6px; margin-top:1rem; cursor:pointer;">
+                    <i class="fas fa-redo-alt" style="margin-right:0.5rem;"></i>Refresh List
+                </button>
+            </div>
+            
+            <!-- 新增表單 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="far fa-plus-square"></i> Submit New Axiom
+                </div>
+                
+                <form id="axiomForm" onsubmit="submitAxiom(event)">
+                    <div class="form-group">
+                        <label class="form-label">Axiom Name</label>
+                        <input type="text" id="axiomName" class="form-input" placeholder="e.g., Bearing Wear v2">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Domain</label>
+                        <select id="axiomDomain" class="form-select">
+                            <option value="thermal">Thermal</option>
+                            <option value="electrical">Electrical</option>
+                            <option value="aging">Aging</option>
+                            <option value="quantum">Quantum</option>
+                            <option value="emc">EMC</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Mathematical Form (JSON)</label>
+                        <textarea id="axiomForm" rows="2" class="form-textarea">{"type":"exponential","form":"y = a * exp(b*x)"}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Confidence: <span id="confidenceValue">95%</span></label>
+                        <input type="range" id="axiomConfidence" min="0" max="1" step="0.01" value="0.95" class="slider">
+                        <div class="slider-labels">
+                            <span>0%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="requiresExpert" style="width:16px; height:16px;">
+                        <label for="requiresExpert">Requires expert review</label>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Submit Axiom</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- FPGA 加速器 (可收縮) -->
+        <div class="fpga-section">
+            <div class="fpga-header" onclick="toggleFpga()">
+                <div class="fpga-title">
+                    <i class="fas fa-microchip"></i>
+                    <span>FPGA Accelerator</span>
+                </div>
+                <i class="fas fa-chevron-down" id="fpgaChevron"></i>
+            </div>
+            
+            <div id="fpgaContent" class="fpga-stats">
+                <div class="fpga-stat">
+                    <div class="fpga-stat-value">200 MHz</div>
+                    <div class="fpga-stat-label">Clock</div>
+                </div>
+                <div class="fpga-stat">
+                    <div class="fpga-stat-value">1M/s</div>
+                    <div class="fpga-stat-label">Throughput</div>
+                </div>
+                <div class="fpga-stat">
+                    <div class="fpga-stat-value">5 W</div>
+                    <div class="fpga-stat-label">Power</div>
+                </div>
+                <div class="fpga-stat">
+                    <div class="fpga-stat-value">-40~85°C</div>
+                    <div class="fpga-stat-label">Temp</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <span>© 2026 AICHIP Corporation · XRAG v1.0</span>
+            <span>UPASL Compatible · Extreme Reliability</span>
+        </div>
+    </div>
+    
+    <script>
+        const socket = io();
+        let fpgaVisible = true;
+        
+        function toggleFpga() {
+            const content = document.getElementById('fpgaContent');
+            const chevron = document.getElementById('fpgaChevron');
+            fpgaVisible = !fpgaVisible;
+            content.style.display = fpgaVisible ? 'grid' : 'none';
+            chevron.className = fpgaVisible ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        }
+        
+        // 圖表 - 使用對比色，不用品牌色
+        const ctx = document.getElementById('domainChart').getContext('2d');
+        const domainChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Thermal', 'Electrical', 'Aging', 'Quantum', 'EMC', 'Other'],
+                datasets: [{
+                    data: [35, 28, 22, 15, 18, 14],
+                    backgroundColor: [
+                        '#5470c6', // 藍
+                        '#91cc75', // 綠
+                        '#fac858', // 黃
+                        '#ee6666', // 紅
+                        '#73c0de', // 淺藍
+                        '#3ba272'  // 深綠
+                    ],
+                    borderColor: '#000000',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#222', titleColor: '#fff', bodyColor: '#ccc' }
+                },
+                cutout: '65%'
+            }
+        });
+        
+        // 更新信心度顯示
+        document.getElementById('axiomConfidence').addEventListener('input', function(e) {
+            document.getElementById('confidenceValue').textContent = Math.round(e.target.value * 100) + '%';
+        });
+        
+        // 載入待審清單 (模擬數據)
+        function loadPendingReviews() {
+            const list = document.getElementById('pendingList');
+            list.innerHTML = '<div style="text-align:center; padding:2rem; color:#666;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            
+            fetch('/api/pending_reviews')
+                .then(res => res.json())
+                .then(data => {
+                    list.innerHTML = '';
+                    if (data.length === 0) {
+                        list.innerHTML = '<div style="text-align:center; padding:2rem; color:#666;">No pending reviews</div>';
+                        document.getElementById('pendingCount').textContent = '0';
+                        return;
+                    }
+                    
+                    data.forEach(item => {
+                        list.innerHTML += `
+                            <div class="pending-item">
+                                <div class="pending-info">
+                                    <h4>${item.name}</h4>
+                                    <div class="pending-meta">${item.domain} · ${Math.round(item.confidence*100)}% confidence</div>
+                                </div>
+                                <div class="pending-actions">
+                                    <button class="btn-approve" onclick="reviewAxiom('${item.candidate_id}', true)">✓</button>
+                                    <button class="btn-reject" onclick="reviewAxiom('${item.candidate_id}', false)">✗</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('pendingCount').textContent = data.length;
+                })
+                .catch(() => {
+                    list.innerHTML = '<div style="text-align:center; padding:2rem; color:#666;">Failed to load</div>';
+                });
+        }
+        
+        // 提交公理
+        function submitAxiom(event) {
+            event.preventDefault();
+            alert('Axiom submitted (demo)');
+            // 實際 API 呼叫會在這裡
+        }
+        
+        // 審查公理
+        function reviewAxiom(id, approved) {
+            alert(approved ? 'Approved (demo)' : 'Rejected (demo)');
+            loadPendingReviews();
+        }
+        
+        // 刷新數據
+        function refreshData() {
+            fetch('/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('totalAxioms').textContent = data.total_axioms || 136;
+                    document.getElementById('frozenAxioms').textContent = data.frozen_axioms || 5;
+                    document.getElementById('pendingReviews').textContent = data.pending_reviews || 3;
+                });
+            
+            // 更新活動記錄 (模擬)
+            const activities = [
+                { name: 'Bearing Wear v2', time: '2 min ago' },
+                { name: 'Quantum Correction', time: '15 min ago' },
+                { name: 'Thermal Expansion', time: '1 hour ago' }
+            ];
+            
+            const activityHtml = activities.map(a => `
+                <div class="activity-item">
+                    <span class="activity-name">${a.name}</span>
+                    <span class="activity-time">${a.time}</span>
+                </div>
+            `).join('');
+            
+            document.getElementById('recentActivities').innerHTML = activityHtml;
+        }
+        
+        // 初始化
+        loadPendingReviews();
+        refreshData();
+        
+        // 自動刷新
+        setInterval(refreshData, 30000);
+    </script>
+</body>
+</html>

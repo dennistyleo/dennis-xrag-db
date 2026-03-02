@@ -1,0 +1,743 @@
+cat > templates/dashboard.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AICHIP XRAG Control Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/aichip-logo.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <style>
+        /* AICHIP Brand Colors */
+        :root {
+            --bg-deep: #0A0A0F;
+            --bg-dark: #121218;
+            --bg-card: #1A1A24;
+            --bg-card-hover: #222230;
+            
+            --gold-primary: #C5A028;
+            --gold-secondary: #B8860B;
+            --gold-dim: #8B7355;
+            
+            --neon-green: #39FF14;
+            --neon-dim: #7CFC00;
+            --neon-glow: rgba(57, 255, 20, 0.15);
+            
+            --text-primary: #FFFFFF;
+            --text-secondary: #E0E0E0;
+            --text-dim: #A0A0A0;
+            --text-muted: #666666;
+            
+            --success: #39FF14;
+            --warning: #FFA500;
+            --error: #FF4444;
+        }
+        
+        body {
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(197, 160, 40, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(57, 255, 20, 0.03) 0%, transparent 30%);
+            min-height: 100vh;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold-dim);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gold-primary);
+        }
+        
+        /* AICHIP Logo - 使用圖片 */
+        .aichip-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .aichip-logo-img {
+            height: 45px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+            transition: all 0.3s ease;
+        }
+        
+        .aichip-logo-img:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 10px var(--gold-primary));
+        }
+        
+        /* AICHIP Cards */
+        .aichip-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(197, 160, 40, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .aichip-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold-primary), var(--neon-green));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .aichip-card:hover::before {
+            opacity: 1;
+        }
+        
+        .aichip-card:hover {
+            transform: translateY(-4px);
+            background: var(--bg-card-hover);
+            border-color: rgba(57, 255, 20, 0.3);
+            box-shadow: 0 12px 48px rgba(57, 255, 20, 0.1);
+        }
+        
+        /* Gold accent */
+        .gold-accent {
+            color: var(--gold-primary);
+            text-shadow: 0 0 10px rgba(197, 160, 40, 0.3);
+        }
+        
+        /* Neon accent */
+        .neon-accent {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px var(--neon-glow);
+            font-weight: bold;
+        }
+        
+        /* Gold button */
+        .gold-button {
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary));
+            color: var(--bg-deep);
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .gold-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(197, 160, 40, 0.5);
+        }
+        
+        /* Neon button */
+        .neon-button {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .neon-button:hover {
+            background: var(--neon-green);
+            color: var(--bg-deep);
+            box-shadow: 0 0 30px var(--neon-glow);
+        }
+        
+        /* Status indicators */
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        
+        .status-dot.green {
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-glow);
+        }
+        
+        .status-dot.gold {
+            background: var(--gold-primary);
+            box-shadow: 0 0 10px rgba(197, 160, 40, 0.5);
+        }
+        
+        /* Input fields */
+        .aichip-input {
+            background: var(--bg-dark);
+            border: 1px solid rgba(197, 160, 40, 0.3);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .aichip-input:focus {
+            outline: none;
+            border-color: var(--neon-green);
+            box-shadow: 0 0 15px var(--neon-glow);
+        }
+        
+        .aichip-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        /* Pending item */
+        .pending-item {
+            background: var(--bg-dark);
+            border-left: 4px solid var(--gold-primary);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .pending-item:hover {
+            transform: translateX(5px);
+            border-left-color: var(--neon-green);
+            background: var(--bg-card);
+        }
+        
+        /* Chart container */
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* FPGA Section */
+        .fpga-section {
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-deep));
+            border: 1px solid rgba(57, 255, 20, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .fpga-section::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--neon-glow) 0%, transparent 60%);
+            opacity: 0.05;
+            animation: rotate 30s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Loading spinner */
+        .aichip-spinner {
+            border: 3px solid var(--bg-dark);
+            border-top: 3px solid var(--neon-green);
+            border-right: 3px solid var(--gold-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Navigation Bar with AICHIP Logo -->
+    <nav class="sticky top-0 z-50" style="background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(197, 160, 40, 0.2);">
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="aichip-logo-container">
+                    <!-- 真正的 AICHIP 圖片 Logo -->
+                    <img src="/static/aichip-logo.png" 
+                         alt="AICHIP" 
+                         class="aichip-logo-img"
+                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22180%22%20height%3D%2240%22%20viewBox%3D%220%200%20180%2040%22%3E%3Ctext%20x%3D%2210%22%20y%3D%2230%22%20font-family%3D%22Arial%22%20font-size%3D%2224%22%20fill%3D%22%23C5A028%22%3EAIC%3C%2Ftext%3E%3Ctext%20x%3D%2270%22%20y%3D%2230%22%20font-family%3D%22Arial%22%20font-size%3D%2224%22%20fill%3D%22%2339FF14%22%3EHIP%3C%2Ftext%3E%3C%2Fsvg%3E';">
+                    
+                    <span class="text-sm text-text-dim ml-2">| XRAG Control</span>
+                </div>
+                
+                <div class="flex items-center space-x-6">
+                    <!-- Status -->
+                    <div class="flex items-center space-x-3">
+                        <span class="status-dot green"></span>
+                        <span class="text-text-secondary">System Online</span>
+                    </div>
+                    
+                    <!-- Refresh Button -->
+                    <button onclick="refreshData()" class="gold-button text-sm">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                    
+                    <!-- User -->
+                    <div class="flex items-center space-x-2 cursor-pointer hover:opacity-80">
+                        <i class="fas fa-user-circle text-2xl" style="color: var(--gold-primary);"></i>
+                        <span class="text-text-secondary">Admin</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-6 py-8">
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Axioms -->
+            <div class="aichip-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-text-dim text-sm">TOTAL AXIOMS</span>
+                    <i class="fas fa-database" style="color: var(--gold-primary);"></i>
+                </div>
+                <div class="flex items-end justify-between">
+                    <span id="totalAxioms" class="text-4xl font-bold gold-accent">132</span>
+                    <span class="text-text-dim text-sm">17 domains</span>
+                </div>
+                <div class="mt-4 flex items-center text-xs">
+                    <span class="status-dot green"></span>
+                    <span class="text-text-dim">+12 this month</span>
+                </div>
+            </div>
+            
+            <!-- Frozen Axioms -->
+            <div class="aichip-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-text-dim text-sm">FROZEN AXIOMS</span>
+                    <i class="fas fa-snowflake neon-accent"></i>
+                </div>
+                <div class="flex items-end justify-between">
+                    <span id="frozenAxioms" class="text-4xl font-bold neon-accent">5</span>
+                    <span class="text-text-dim text-sm">deployed</span>
+                </div>
+                <div class="mt-4 flex items-center text-xs">
+                    <span class="status-dot green"></span>
+                    <span class="text-text-dim">+2 today</span>
+                </div>
+            </div>
+            
+            <!-- Pending Reviews -->
+            <div class="aichip-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-text-dim text-sm">PENDING REVIEW</span>
+                    <i class="fas fa-clock" style="color: var(--warning);"></i>
+                </div>
+                <div class="flex items-end justify-between">
+                    <span id="pendingReviews" class="text-4xl font-bold" style="color: var(--warning);">3</span>
+                    <span class="text-text-dim text-sm">awaiting</span>
+                </div>
+                <div class="mt-4 flex items-center text-xs">
+                    <span class="status-dot" style="background: var(--warning);"></span>
+                    <span class="text-text-dim">1 high priority</span>
+                </div>
+            </div>
+            
+            <!-- System Status -->
+            <div class="aichip-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-text-dim text-sm">SYSTEM STATUS</span>
+                    <i class="fas fa-server neon-accent"></i>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="status-dot green"></span>
+                    <span class="text-lg font-bold text-text-primary">UPASL Active</span>
+                </div>
+                <div class="mt-4 flex justify-between text-xs">
+                    <span class="text-text-dim">Latency: 2.3ms</span>
+                    <span class="text-text-dim">Uptime: 5d 12h</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Domain Distribution -->
+            <div class="lg:col-span-2 chart-container">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-chart-pie gold-accent mr-2"></i>
+                    <span class="text-text-primary">Domain Distribution</span>
+                </h3>
+                <canvas id="domainChart" height="250"></canvas>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="aichip-card">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-history gold-accent mr-2"></i>
+                    <span class="text-text-primary">Recent Activity</span>
+                </h3>
+                
+                <div id="recentActivities" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                    <!-- Dynamic content -->
+                    <div class="flex items-center space-x-3">
+                        <span class="status-dot green"></span>
+                        <span class="text-sm text-text-secondary">Bearing Wear v2</span>
+                        <span class="text-xs text-text-dim ml-auto">2 min ago</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="status-dot" style="background: var(--warning);"></span>
+                        <span class="text-sm text-text-secondary">Quantum Correction</span>
+                        <span class="text-xs text-text-dim ml-auto">15 min ago</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="status-dot gold"></span>
+                        <span class="text-sm text-text-secondary">Thermal Expansion</span>
+                        <span class="text-xs text-text-dim ml-auto">1 hour ago</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-gray-800">
+                    <button class="w-full gold-button py-2 text-sm">
+                        View All Activity <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Reviews and Add Axiom -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Pending Reviews List -->
+            <div class="aichip-card">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold flex items-center">
+                        <i class="fas fa-clipboard-list gold-accent mr-2"></i>
+                        <span class="text-text-primary">Pending Expert Review</span>
+                    </h3>
+                    <span class="bg-yellow-500/10 text-yellow-500 text-xs px-3 py-1 rounded-full border border-yellow-500/30">
+                        <span id="pendingCount">3</span> pending
+                    </span>
+                </div>
+                
+                <div id="pendingList" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    <!-- Dynamic content -->
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-gray-800">
+                    <button onclick="loadPendingReviews()" class="w-full neon-button py-2 text-sm">
+                        <i class="fas fa-redo-alt mr-2"></i>Refresh List
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Add New Axiom Form -->
+            <div class="aichip-card">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-plus-circle gold-accent mr-2"></i>
+                    <span class="text-text-primary">Submit New Axiom</span>
+                </h3>
+                
+                <form id="axiomForm" onsubmit="submitAxiom(event)">
+                    <div class="mb-4">
+                        <label class="block text-text-dim text-sm mb-2">Axiom Name</label>
+                        <input type="text" id="axiomName" class="aichip-input" placeholder="e.g., Bearing Wear v2">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-text-dim text-sm mb-2">Domain</label>
+                        <select id="axiomDomain" class="aichip-input">
+                            <option value="thermal">Thermal</option>
+                            <option value="electrical">Electrical</option>
+                            <option value="aging">Aging</option>
+                            <option value="quantum">Quantum</option>
+                            <option value="emc">EMC</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-text-dim text-sm mb-2">Mathematical Form (JSON)</label>
+                        <textarea id="axiomForm" rows="3" class="aichip-input font-mono" 
+                            placeholder='{"type": "linear", "form": "y = ax + b"}'>{
+  "type": "exponential",
+  "form": "y = a * exp(b*x)"
+}</textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-text-dim text-sm mb-2">Confidence Level</label>
+                        <input type="range" id="axiomConfidence" min="0" max="1" step="0.01" value="0.95" 
+                               class="w-full" style="accent-color: var(--neon-green);">
+                        <div class="flex justify-between text-xs text-text-dim mt-2">
+                            <span>0%</span>
+                            <span id="confidenceValue" class="neon-accent">95%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="requiresExpert" class="w-5 h-5" style="accent-color: var(--gold-primary);">
+                            <span class="text-text-secondary">Requires expert review</span>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="w-full gold-button py-3">
+                        <i class="fas fa-paper-plane mr-2"></i>Submit Axiom
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- FPGA Accelerator -->
+        <div class="fpga-section mt-8">
+            <div class="relative z-10">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-gradient-to-br from-gold-primary/20 to-neon-green/20 rounded-xl flex items-center justify-center border border-neon-green/30">
+                            <i class="fas fa-microchip text-3xl neon-accent"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold">
+                                <span class="gold-accent">FPGA</span>
+                                <span class="neon-accent"> Accelerator</span>
+                            </h3>
+                            <p class="text-text-dim">Hardware-accelerated validation engine</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold neon-accent">50x</div>
+                        <p class="text-text-dim text-sm">faster than software</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                    <div class="bg-black/30 rounded-lg p-4 text-center border border-gray-800">
+                        <div class="text-lg font-bold gold-accent">200 MHz</div>
+                        <div class="text-xs text-text-dim">Clock</div>
+                    </div>
+                    <div class="bg-black/30 rounded-lg p-4 text-center border border-gray-800">
+                        <div class="text-lg font-bold neon-accent">1M/s</div>
+                        <div class="text-xs text-text-dim">Throughput</div>
+                    </div>
+                    <div class="bg-black/30 rounded-lg p-4 text-center border border-gray-800">
+                        <div class="text-lg font-bold gold-accent">5W</div>
+                        <div class="text-xs text-text-dim">Power</div>
+                    </div>
+                    <div class="bg-black/30 rounded-lg p-4 text-center border border-gray-800">
+                        <div class="text-lg font-bold neon-accent">-40~85°C</div>
+                        <div class="text-xs text-text-dim">Temp</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 mt-12 py-6">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between text-xs text-text-dim">
+                <div class="flex items-center space-x-4">
+                    <span>© 2026 AICHIP Corporation</span>
+                    <span>|</span>
+                    <span>XRAG v1.0</span>
+                    <span>|</span>
+                    <span>UPASL Compatible</span>
+                </div>
+                <div>
+                    <span>Built with </span>
+                    <i class="fas fa-heart neon-accent"></i>
+                    <span> for Extreme Reliability</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const socket = io();
+        
+        // Chart
+        const ctx = document.getElementById('domainChart').getContext('2d');
+        const domainChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Thermal', 'Electrical', 'Aging', 'Quantum', 'EMC', 'Other'],
+                datasets: [{
+                    data: [35, 28, 22, 15, 18, 14],
+                    backgroundColor: [
+                        '#C5A028', '#B8860B', '#8B7355', '#39FF14', '#7CFC00', '#4A4A5A'
+                    ],
+                    borderColor: '#1A1A24',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#E0E0E0',
+                            font: { size: 12 }
+                        },
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Update confidence display
+        document.getElementById('axiomConfidence').addEventListener('input', function(e) {
+            document.getElementById('confidenceValue').textContent = Math.round(e.target.value * 100) + '%';
+        });
+
+        // Load pending reviews
+        function loadPendingReviews() {
+            const list = document.getElementById('pendingList');
+            list.innerHTML = '<div class="flex justify-center py-8"><div class="aichip-spinner"></div></div>';
+            
+            fetch('/api/pending_reviews')
+                .then(res => res.json())
+                .then(data => {
+                    list.innerHTML = '';
+                    if (data.length === 0) {
+                        list.innerHTML = '<div class="text-center py-8 text-text-dim">No pending reviews</div>';
+                        return;
+                    }
+                    
+                    data.forEach(item => {
+                        list.innerHTML += `
+                            <div class="pending-item">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-bold gold-accent">${item.name}</h4>
+                                        <p class="text-sm text-text-dim mt-1">
+                                            <span class="neon-accent">${item.domain}</span> • 
+                                            Confidence: ${Math.round(item.confidence*100)}%
+                                        </p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button onclick="reviewAxiom('${item.candidate_id}', true)" 
+                                            class="px-3 py-1 text-xs border border-neon-green text-neon-green rounded hover:bg-neon-green hover:text-black transition">
+                                            ✓ Approve
+                                        </button>
+                                        <button onclick="reviewAxiom('${item.candidate_id}', false)" 
+                                            class="px-3 py-1 text-xs border border-error text-error rounded hover:bg-error hover:text-white transition">
+                                            ✗ Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('pendingCount').textContent = data.length;
+                });
+        }
+
+        // Submit axiom
+        function submitAxiom(event) {
+            event.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('axiomName').value,
+                domain: document.getElementById('axiomDomain').value,
+                mathematical_form: JSON.parse(document.getElementById('axiomForm').value),
+                confidence: parseFloat(document.getElementById('axiomConfidence').value),
+                requires_expert: document.getElementById('requiresExpert').checked
+            };
+            
+            fetch('/api/submit_axiom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Axiom submitted successfully!');
+                    document.getElementById('axiomForm').reset();
+                    loadPendingReviews();
+                    refreshData();
+                }
+            });
+        }
+
+        // Review axiom
+        function reviewAxiom(candidateId, approved) {
+            fetch('/api/review_axiom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    candidate_id: candidateId,
+                    reviewer: 'Admin',
+                    approved: approved,
+                    notes: approved ? 'Approved by admin' : 'Rejected by admin'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    loadPendingReviews();
+                    refreshData();
+                }
+            });
+        }
+
+        // Refresh data
+        function refreshData() {
+            fetch('/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('totalAxioms').textContent = data.total_axioms || 132;
+                    document.getElementById('frozenAxioms').textContent = data.frozen_axioms || 5;
+                    document.getElementById('pendingReviews').textContent = data.pending_reviews || 0;
+                });
+        }
+
+        // Initial load
+        loadPendingReviews();
+        refreshData();
+        
+        // Auto refresh
+        setInterval(() => {
+            refreshData();
+            loadPendingReviews();
+        }, 30000);
+    </script>
+</body>
+</html>
+EOF

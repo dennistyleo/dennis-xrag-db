@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XRAG 控制儀表板</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <style>
+        .status-card {
+            transition: transform 0.2s;
+        }
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    
+    <!-- 頂部導航欄 -->
+    <nav class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-microchip text-3xl"></i>
+                    <span class="text-2xl font-bold">XRAG 控制儀表板</span>
+                    <span class="bg-green-400 text-xs px-2 py-1 rounded-full">v1.0</span>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-2">
+                        <span class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                        <span>系統正常</span>
+                    </div>
+                    <button onclick="refreshData()" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition">
+                        <i class="fas fa-sync-alt mr-2"></i>刷新
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容 -->
+    <div class="container mx-auto px-6 py-8">
+        
+        <!-- 統計卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- 公理總數 -->
+            <div class="status-card bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">公理總數</p>
+                        <p id="totalAxioms" class="text-3xl font-bold text-gray-800">132</p>
+                        <p class="text-xs text-gray-400 mt-1">17 個領域</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-database text-blue-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 已凍結 -->
+            <div class="status-card bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">已凍結公理</p>
+                        <p id="frozenAxioms" class="text-3xl font-bold text-gray-800">5</p>
+                        <p class="text-xs text-green-500 mt-1">↑ 較昨日 +2</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 待審查 -->
+            <div class="status-card bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">待審查</p>
+                        <p id="pendingReviews" class="text-3xl font-bold text-gray-800">3</p>
+                        <p class="text-xs text-yellow-500 mt-1">需專家確認</p>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 系統狀態 -->
+            <div class="status-card bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">系統狀態</p>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                            <span class="font-bold">UPASL 運行中</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">延遲: 2.3ms</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <i class="fas fa-server text-purple-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 圖表和清單區域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- 領域分佈圖 -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-chart-pie text-blue-500 mr-2"></i>
+                    領域分佈
+                </h3>
+                <canvas id="domainChart" height="250"></canvas>
+            </div>
+            
+            <!-- 最近活動 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-history text-blue-500 mr-2"></i>
+                    最近活動
+                </h3>
+                <div id="recentActivities" class="space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span class="text-sm">公理 #123 已凍結</span>
+                        <span class="text-xs text-gray-400 ml-auto">2分鐘前</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                        <span class="text-sm">量子效修正 待審查</span>
+                        <span class="text-xs text-gray-400 ml-auto">15分鐘前</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span class="text-sm">UPASL 驗證完成</span>
+                        <span class="text-xs text-gray-400 ml-auto">1小時前</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg transition">
+                        <i class="fas fa-eye mr-2"></i>查看全部活動
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 待審清單和新增表單 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- 待審清單 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold flex items-center">
+                        <i class="fas fa-clipboard-list text-blue-500 mr-2"></i>
+                        待審查公理
+                    </h3>
+                    <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">3 筆待處理</span>
+                </div>
+                
+                <div id="pendingList" class="space-y-4">
+                    <!-- 動態載入待審項目 -->
+                </div>
+                
+                <div class="mt-6">
+                    <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition">
+                        <i class="fas fa-redo-alt mr-2"></i>載入更多
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 新增公理表單 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-plus-circle text-blue-500 mr-2"></i>
+                    手動新增公理
+                </h3>
+                
+                <form id="axiomForm" onsubmit="submitAxiom(event)">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">公理名稱</label>
+                        <input type="text" id="axiomName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">領域</label>
+                        <select id="axiomDomain" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                            <option value="thermal">熱學</option>
+                            <option value="electrical">電學</option>
+                            <option value="aging">老化</option>
+                            <option value="quantum">量子力學</option>
+                            <option value="emc">EMC</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">數學形式</label>
+                        <textarea id="axiomForm" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder='{"type": "linear", "form": "y = ax + b"}'></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">信心度</label>
+                        <input type="range" id="axiomConfidence" min="0" max="1" step="0.01" value="0.95" class="w-full">
+                        <div class="flex justify-between text-xs text-gray-600 mt-1">
+                            <span>0%</span>
+                            <span id="confidenceValue">95%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="requiresExpert" class="form-checkbox h-5 w-5 text-blue-500">
+                            <span class="ml-2 text-gray-700">需要專家審查</span>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition">
+                        <i class="fas fa-paper-plane mr-2"></i>提交公理
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- FPGA 狀態卡 -->
+        <div class="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-xl p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-microchip text-4xl text-blue-400"></i>
+                    <div>
+                        <h3 class="text-xl font-bold">FPGA 加速器</h3>
+                        <p class="text-gray-400 text-sm">硬體加速驗證引擎</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold text-green-400">50x</div>
+                    <p class="text-gray-400 text-sm">軟體加速比</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 mt-6">
+                <div class="bg-gray-700 rounded-lg p-3 text-center">
+                    <div class="text-lg font-bold">200 MHz</div>
+                    <div class="text-xs text-gray-400">時脈頻率</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-3 text-center">
+                    <div class="text-lg font-bold">1M/s</div>
+                    <div class="text-xs text-gray-400">吞吐量</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-3 text-center">
+                    <div class="text-lg font-bold">5W</div>
+                    <div class="text-xs text-gray-400">功耗</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-3 text-center">
+                    <div class="text-lg font-bold">-40~85°C</div>
+                    <div class="text-xs text-gray-400">工作溫度</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const socket = io();
+        
+        // 初始化圖表
+        const ctx = document.getElementById('domainChart').getContext('2d');
+        const domainChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['熱學', '電學', '老化', '量子', 'EMC', '其他'],
+                datasets: [{
+                    data: [35, 28, 22, 15, 18, 14],
+                    backgroundColor: [
+                        '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6b7280'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // 更新信心度顯示
+        document.getElementById('axiomConfidence').addEventListener('input', function(e) {
+            document.getElementById('confidenceValue').textContent = (e.target.value * 100).toFixed(0) + '%';
+        });
+
+        // 載入待審清單
+        function loadPendingReviews() {
+            fetch('/api/pending_reviews')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('pendingList');
+                    list.innerHTML = '';
+                    data.forEach(item => {
+                        list.innerHTML += `
+                            <div class="border-l-4 border-yellow-400 bg-yellow-50 p-4 rounded-r-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-semibold">${item.name}</h4>
+                                        <p class="text-sm text-gray-600">領域: ${item.domain} | 信心: ${(item.confidence*100).toFixed(0)}%</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button onclick="approveAxiom('${item.candidate_id}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button onclick="rejectAxiom('${item.candidate_id}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2">提交時間: ${item.submitted_at}</p>
+                            </div>
+                        `;
+                    });
+                });
+        }
+
+        // 提交公理
+        function submitAxiom(event) {
+            event.preventDefault();
+            
+            const data = {
+                name: document.getElementById('axiomName').value,
+                domain: document.getElementById('axiomDomain').value,
+                mathematical_form: JSON.parse(document.getElementById('axiomForm').value),
+                confidence: parseFloat(document.getElementById('axiomConfidence').value),
+                requires_expert: document.getElementById('requiresExpert').checked
+            };
+            
+            fetch('/api/submit_axiom', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert('公理提交成功！');
+                loadPendingReviews();
+                refreshData();
+            })
+            .catch(err => {
+                alert('提交失敗：' + err);
+            });
+        }
+
+        // 刷新數據
+        function refreshData() {
+            fetch('/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('totalAxioms').textContent = data.total_axioms;
+                    document.getElementById('frozenAxioms').textContent = data.frozen_axioms;
+                    document.getElementById('pendingReviews').textContent = data.pending_reviews;
+                });
+        }
+
+        // 初始化載入
+        loadPendingReviews();
+        refreshData();
+        
+        // 定時刷新（每30秒）
+        setInterval(() => {
+            refreshData();
+            loadPendingReviews();
+        }, 30000);
+    </script>
+</body>
+</html>

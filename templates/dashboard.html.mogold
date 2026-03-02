@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XRAG Control Dashboard | Mo-Gold Edition</title>
+    
+    <!-- Tailwind CSS CDN with custom config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <style>
+        /* Mo-Gold Theme */
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --gold-primary: #ffd700;
+            --gold-secondary: #daa520;
+            --gold-dim: #b8860b;
+            --gold-glow: rgba(255, 215, 0, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --text-dim: #a0a0a0;
+            --success: #00ff00;
+            --warning: #ff8c00;
+            --error: #ff4444;
+        }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold-dim);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gold-primary);
+        }
+        
+        /* Glass morphism effect */
+        .glass-card {
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gold-dim);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Gold gradient */
+        .gold-gradient {
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Status card */
+        .status-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--gold-dim);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--gold-primary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 14px;
+            z-index: -1;
+        }
+        
+        .status-card:hover::before {
+            opacity: 0.3;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold-primary);
+            box-shadow: 0 10px 30px var(--gold-glow);
+        }
+        
+        /* Gold button */
+        .gold-button {
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary));
+            color: var(--bg-primary);
+            font-weight: bold;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .gold-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--gold-primary);
+        }
+        
+        .gold-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Input fields */
+        .gold-input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gold-dim);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .gold-input:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+        
+        .gold-input::placeholder {
+            color: var(--text-dim);
+        }
+        
+        /* Pending item */
+        .pending-item {
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--gold-primary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .pending-item:hover {
+            transform: translateX(5px);
+            box-shadow: -5px 5px 20px var(--gold-glow);
+        }
+        
+        /* Loading spinner */
+        .gold-spinner {
+            border: 3px solid var(--bg-tertiary);
+            border-top: 3px solid var(--gold-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Chart container */
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--gold-dim);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        
+        /* FPGA Section */
+        .fpga-section {
+            background: linear-gradient(145deg, var(--bg-secondary), #000);
+            border: 1px solid var(--gold-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .fpga-section::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
+            opacity: 0.1;
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    
+    <!-- Navigation Bar -->
+    <nav class="glass-card sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-crown text-3xl gold-gradient"></i>
+                    <span class="text-2xl font-bold">
+                        <span class="gold-gradient">XRAG</span> 
+                        <span class="text-white">Control Dashboard</span>
+                    </span>
+                    <span class="bg-gold-dim text-xs px-2 py-1 rounded-full text-black font-bold">Mo-Gold Edition</span>
+                </div>
+                
+                <div class="flex items-center space-x-6">
+                    <!-- Status Indicator -->
+                    <div class="flex items-center space-x-2">
+                        <span class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                        <span class="text-text-secondary">System Online</span>
+                    </div>
+                    
+                    <!-- Refresh Button -->
+                    <button onclick="refreshData()" class="gold-button flex items-center space-x-2">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                    
+                    <!-- User Menu -->
+                    <div class="flex items-center space-x-2 cursor-pointer hover:opacity-80">
+                        <i class="fas fa-user-circle text-2xl gold-gradient"></i>
+                        <span class="text-text-secondary">Admin</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-6 py-8">
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Axioms -->
+            <div class="status-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-text-dim text-sm mb-1">Total Axioms</p>
+                        <p id="totalAxioms" class="text-4xl font-bold gold-gradient">132</p>
+                        <p class="text-xs text-text-dim mt-2">Across 17 domains</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gold-dim/20 flex items-center justify-center">
+                        <i class="fas fa-database text-2xl gold-gradient"></i>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gold-dim/30">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-text-dim">Active</span>
+                        <span class="text-gold-primary font-bold">128</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Frozen Axioms -->
+            <div class="status-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-text-dim text-sm mb-1">Frozen Axioms</p>
+                        <p id="frozenAxioms" class="text-4xl font-bold gold-gradient">5</p>
+                        <p class="text-xs text-green-400 mt-2">↑ +2 today</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gold-dim/20 flex items-center justify-center">
+                        <i class="fas fa-snowflake text-2xl gold-gradient"></i>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gold-dim/30">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-text-dim">Ready for deployment</span>
+                        <span class="text-green-400 font-bold">5</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pending Reviews -->
+            <div class="status-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-text-dim text-sm mb-1">Pending Reviews</p>
+                        <p id="pendingReviews" class="text-4xl font-bold text-warning">3</p>
+                        <p class="text-xs text-warning mt-2">Awaiting expert approval</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-warning/20 flex items-center justify-center">
+                        <i class="fas fa-clock text-2xl text-warning"></i>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gold-dim/30">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-text-dim">High priority</span>
+                        <span class="text-warning font-bold">1</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Status -->
+            <div class="status-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-text-dim text-sm mb-1">System Status</p>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                            <span class="text-xl font-bold text-green-400">UPASL Active</span>
+                        </div>
+                        <p class="text-xs text-text-dim mt-2">Latency: 2.3ms</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gold-dim/20 flex items-center justify-center">
+                        <i class="fas fa-server text-2xl gold-gradient"></i>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gold-dim/30">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-text-dim">Uptime</span>
+                        <span class="text-gold-primary font-bold">5d 12h</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Domain Distribution Chart -->
+            <div class="lg:col-span-2 chart-container">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-chart-pie gold-gradient mr-2"></i>
+                    <span class="gold-gradient">Domain Distribution</span>
+                </h3>
+                <canvas id="domainChart" height="250"></canvas>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="chart-container">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-history gold-gradient mr-2"></i>
+                    <span class="gold-gradient">Recent Activity</span>
+                </h3>
+                
+                <div id="recentActivities" class="space-y-4 max-h-80 overflow-y-auto pr-2">
+                    <!-- Dynamic content will be loaded here -->
+                    <div class="flex items-center space-x-3 animate-pulse">
+                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span class="text-sm text-text-secondary">Loading activities...</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-gold-dim/30">
+                    <button class="w-full gold-button py-2">
+                        <i class="fas fa-eye mr-2"></i>View All Activity
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Reviews and Add Axiom -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Pending Reviews List -->
+            <div class="chart-container">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold flex items-center">
+                        <i class="fas fa-clipboard-list gold-gradient mr-2"></i>
+                        <span class="gold-gradient">Pending Expert Review</span>
+                    </h3>
+                    <span class="bg-warning/20 text-warning text-xs px-3 py-1 rounded-full border border-warning/50">
+                        <span id="pendingCount">3</span> awaiting
+                    </span>
+                </div>
+                
+                <div id="pendingList" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-gold-dim/30">
+                    <button onclick="loadPendingReviews()" class="w-full gold-button py-2">
+                        <i class="fas fa-redo-alt mr-2"></i>Refresh List
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Add New Axiom Form -->
+            <div class="chart-container">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-plus-circle gold-gradient mr-2"></i>
+                    <span class="gold-gradient">Submit New Axiom</span>
+                </h3>
+                
+                <form id="axiomForm" onsubmit="submitAxiom(event)">
+                    <div class="mb-4">
+                        <label class="block text-text-dim text-sm font-medium mb-2">Axiom Name</label>
+                        <input type="text" id="axiomName" class="gold-input" placeholder="e.g., Bearing Wear Prediction v2" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-text-dim text-sm font-medium mb-2">Domain</label>
+                        <select id="axiomDomain" class="gold-input">
+                            <option value="thermal">Thermal</option>
+                            <option value="electrical">Electrical</option>
+                            <option value="aging">Aging</option>
+                            <option value="quantum">Quantum</option>
+                            <option value="emc">EMC</option>
+                            <option value="mechanics">Mechanics</option>
+                            <option value="fluid">Fluid Dynamics</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-text-dim text-sm font-medium mb-2">Mathematical Form (JSON)</label>
+                        <textarea id="axiomForm" rows="3" class="gold-input font-mono" 
+                            placeholder='{"type": "exponential", "form": "y = a * exp(b*x)"}'>{
+  "type": "linear",
+  "form": "y = ax + b"
+}</textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-text-dim text-sm font-medium mb-2">Confidence Level</label>
+                        <input type="range" id="axiomConfidence" min="0" max="1" step="0.01" value="0.95" class="w-full accent-gold-primary">
+                        <div class="flex justify-between text-xs text-text-dim mt-2">
+                            <span>0%</span>
+                            <span id="confidenceValue" class="gold-gradient font-bold">95%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="requiresExpert" class="w-5 h-5 accent-gold-primary">
+                            <span class="text-text-secondary">Requires expert review</span>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="w-full gold-button py-3 text-lg">
+                        <i class="fas fa-paper-plane mr-2"></i>Submit Axiom
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- FPGA Accelerator Status -->
+        <div class="fpga-section mt-8">
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-gold-dim/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-microchip text-4xl gold-gradient"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold gold-gradient">FPGA Accelerator</h3>
+                            <p class="text-text-dim">Hardware-accelerated validation engine</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-bold gold-gradient">50x</div>
+                        <p class="text-text-dim text-sm">Software acceleration</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                    <div class="bg-bg-tertiary/50 rounded-lg p-4 text-center border border-gold-dim/30">
+                        <div class="text-xl font-bold gold-gradient">200 MHz</div>
+                        <div class="text-xs text-text-dim">Clock Frequency</div>
+                    </div>
+                    <div class="bg-bg-tertiary/50 rounded-lg p-4 text-center border border-gold-dim/30">
+                        <div class="text-xl font-bold gold-gradient">1M/s</div>
+                        <div class="text-xs text-text-dim">Throughput</div>
+                    </div>
+                    <div class="bg-bg-tertiary/50 rounded-lg p-4 text-center border border-gold-dim/30">
+                        <div class="text-xl font-bold gold-gradient">5W</div>
+                        <div class="text-xs text-text-dim">Power Consumption</div>
+                    </div>
+                    <div class="bg-bg-tertiary/50 rounded-lg p-4 text-center border border-gold-dim/30">
+                        <div class="text-xl font-bold gold-gradient">-40~85°C</div>
+                        <div class="text-xs text-text-dim">Operating Temp</div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex items-center justify-between text-sm text-text-dim">
+                    <div class="flex items-center space-x-4">
+                        <span class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span> PCIe Gen3 x4</span>
+                        <span class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span> DDR4 Interface</span>
+                        <span class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span> UART Debug</span>
+                    </div>
+                    <span class="gold-gradient">Status: Connected</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const socket = io();
+        
+        // Initialize Chart
+        const ctx = document.getElementById('domainChart').getContext('2d');
+        const domainChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Thermal', 'Electrical', 'Aging', 'Quantum', 'EMC', 'Other'],
+                datasets: [{
+                    data: [35, 28, 22, 15, 18, 14],
+                    backgroundColor: [
+                        '#ffd700',
+                        '#daa520',
+                        '#b8860b',
+                        '#cd7f32',
+                        '#c0a040',
+                        '#8b7355'
+                    ],
+                    borderColor: '#000000',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e0e0e0',
+                            font: { size: 12 }
+                        },
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Update confidence display
+        document.getElementById('axiomConfidence').addEventListener('input', function(e) {
+            const percent = Math.round(e.target.value * 100);
+            document.getElementById('confidenceValue').textContent = percent + '%';
+        });
+
+        // Load pending reviews
+        function loadPendingReviews() {
+            const list = document.getElementById('pendingList');
+            list.innerHTML = '<div class="flex justify-center py-8"><div class="gold-spinner"></div></div>';
+            
+            fetch('/api/pending_reviews')
+                .then(res => res.json())
+                .then(data => {
+                    list.innerHTML = '';
+                    if (data.length === 0) {
+                        list.innerHTML = '<div class="text-center py-8 text-text-dim">No pending reviews</div>';
+                        return;
+                    }
+                    
+                    data.forEach(item => {
+                        const date = new Date(item.submitted_at).toLocaleString();
+                        list.innerHTML += `
+                            <div class="pending-item">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold gold-gradient">${item.name}</h4>
+                                        <p class="text-sm text-text-dim">
+                                            <i class="fas fa-tag mr-1"></i>${item.domain} | 
+                                            <i class="fas fa-chart-line mr-1"></i>Confidence: ${Math.round(item.confidence*100)}%
+                                        </p>
+                                        <p class="text-xs text-text-dim mt-2">
+                                            <i class="far fa-clock mr-1"></i>${date}
+                                        </p>
+                                    </div>
+                                    <div class="flex space-x-2 ml-4">
+                                        <button onclick="reviewAxiom('${item.candidate_id}', true)" 
+                                            class="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg text-sm hover:bg-green-500/40 transition border border-green-500/50">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button onclick="reviewAxiom('${item.candidate_id}', false)" 
+                                            class="bg-red-500/20 text-red-400 px-3 py-1 rounded-lg text-sm hover:bg-red-500/40 transition border border-red-500/50">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('pendingCount').textContent = data.length;
+                })
+                .catch(err => {
+                    list.innerHTML = '<div class="text-center py-8 text-error">Failed to load</div>';
+                });
+        }
+
+        // Submit new axiom
+        function submitAxiom(event) {
+            event.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('axiomName').value,
+                domain: document.getElementById('axiomDomain').value,
+                mathematical_form: JSON.parse(document.getElementById('axiomForm').value),
+                confidence: parseFloat(document.getElementById('axiomConfidence').value),
+                requires_expert: document.getElementById('requiresExpert').checked,
+                expert_reason: document.getElementById('requiresExpert').checked ? 'Manual submission' : ''
+            };
+            
+            fetch('/api/submit_axiom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Axiom submitted successfully!');
+                    document.getElementById('axiomForm').reset();
+                    loadPendingReviews();
+                    refreshData();
+                } else {
+                    alert('❌ Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                alert('❌ Error: ' + err);
+            });
+        }
+
+        // Review axiom
+        function reviewAxiom(candidateId, approved) {
+            const action = approved ? 'approve' : 'reject';
+            const notes = prompt(`Please enter notes for ${action} (optional):`, '');
+            
+            fetch('/api/review_axiom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    candidate_id: candidateId,
+                    reviewer: 'Admin',
+                    approved: approved,
+                    notes: notes || (approved ? 'Approved by admin' : 'Rejected by admin')
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(`✅ Axiom ${action}d successfully!`);
+                    loadPendingReviews();
+                    refreshData();
+                } else {
+                    alert('❌ Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                alert('❌ Error: ' + err);
+            });
+        }
+
+        // Refresh all data
+        function refreshData() {
+            fetch('/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('totalAxioms').textContent = data.total_axioms || 132;
+                    document.getElementById('frozenAxioms').textContent = data.frozen_axioms || 5;
+                    document.getElementById('pendingReviews').textContent = data.pending_reviews || 0;
+                })
+                .catch(err => console.error('Failed to refresh stats:', err));
+            
+            // Update recent activities
+            const activities = document.getElementById('recentActivities');
+            activities.innerHTML = '';
+            const now = new Date();
+            
+            const demoActivities = [
+                { type: 'frozen', name: 'Bearing Wear v2', time: '2 min ago' },
+                { type: 'pending', name: 'Quantum Correction', time: '15 min ago' },
+                { type: 'validated', name: 'Thermal Expansion', time: '1 hour ago' },
+                { type: 'frozen', name: 'EMC Shielding', time: '2 hours ago' },
+                { type: 'pending', name: 'Fatigue Model', time: '3 hours ago' }
+            ];
+            
+            demoActivities.forEach(act => {
+                const colors = {
+                    'frozen': 'text-green-400',
+                    'pending': 'text-warning',
+                    'validated': 'text-blue-400'
+                };
+                const icons = {
+                    'frozen': 'fa-snowflake',
+                    'pending': 'fa-clock',
+                    'validated': 'fa-check-circle'
+                };
+                
+                activities.innerHTML += `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 rounded-full ${act.type === 'frozen' ? 'bg-green-500' : act.type === 'pending' ? 'bg-warning' : 'bg-blue-500'}"></div>
+                        <span class="text-sm text-text-secondary flex-1">${act.name}</span>
+                        <span class="text-xs text-text-dim">${act.time}</span>
+                        <i class="fas ${icons[act.type]} ${colors[act.type]}"></i>
+                    </div>
+                `;
+            });
+        }
+
+        // Socket.IO events
+        socket.on('connect', function() {
+            console.log('Connected to dashboard');
+        });
+
+        socket.on('new_axiom', function(data) {
+            refreshData();
+            loadPendingReviews();
+            // Show notification
+            const notification = new Notification('New Axiom Submitted', {
+                body: `${data.name} has been submitted for review`,
+                icon: '/favicon.ico'
+            });
+        });
+
+        socket.on('axiom_reviewed', function(data) {
+            refreshData();
+            loadPendingReviews();
+        });
+
+        // Initial load
+        loadPendingReviews();
+        refreshData();
+        
+        // Auto refresh every 30 seconds
+        setInterval(() => {
+            refreshData();
+            loadPendingReviews();
+        }, 30000);
+        
+        // Request notification permission
+        if (Notification.permission !== 'granted') {
+            Notification.requestPermission();
+        }
+    </script>
+</body>
+</html>
