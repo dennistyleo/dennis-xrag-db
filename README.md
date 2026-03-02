@@ -1,214 +1,203 @@
-<<<<<<< HEAD
-# XRAG 公理引擎
+# XRAG Axiom Engine - Core Component of XR Ecosystem
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/flask-2.3-green.svg)](https://flask.palletsprojects.com/)
+[![FPGA Ready](https://img.shields.io/badge/FPGA-ready-orange.svg)](docs/fpga/README.md)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
-## 📋 專案簡介
+## 📋 Overview
 
-XRAG 公理引擎是一個跨領域的知識庫與匹配系統，支援 17 大領域、132+ 條公理，提供 RESTful API 進行 AI 自創公理的相似度匹配。
+XRAG (Extreme Reliability Axiom Generator) is the core axiom engine of the XR ecosystem, providing:
 
-## ✨ 功能特色
+- **136+ Cross-domain axioms**: Covering 17 engineering domains
+- **Multi-layer matching engine**: Syntax tree, variable signature, boundary condition matching
+- **RESTful API**: Easy integration with any system
+- **Real-time dashboard**: Visual management interface
+- **FPGA ready**: Hardware acceleration up to 46,000x
 
-- **多領域知識庫**：電學、熱學、EMC、流體力學、固體力學、半導體、量子力學、老化、因果漂移、統計指標、控制理論、資訊理論、財務工程、電源行為、基板材料、製造工藝、醫療保健、品質管理
-- **多層次匹配**：語法樹、變數簽章、邊界條件、類比推理
-- **未知通道**：無匹配公理自動儲存，支援人工審查
-- **RESTful API**：完整的 HTTP 介面，易於整合
-- **輕量級**：SQLite 資料庫，無需額外服務
+## 🏗️ System Architecture
+┌─────────────────────────────────────────────────────┐
+│ XRAG Core │
+├─────────────────────────────────────────────────────┤
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│ │ Matcher │ │ Axiom │ │ Unknown │ │
+│ │ Engine │ │ Library │ │ Channel │ │
+│ │(CPU/FPGA)│ │ (136) │ │ (Review) │ │
+│ └──────────┘ └──────────┘ └──────────┘ │
+├─────────────────────────────────────────────────────┤
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│ │ REST API │ │Dashboard │ │ XR-BUS │ │
+│ │ (5001) │ │ (5002) │ │ Interface│ │
+│ └──────────┘ └──────────┘ └──────────┘ │
+└─────────────────────────────────────────────────────┘
 
-## 🚀 快速開始
+text
 
-### 安裝
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
-# 克隆倉庫
-git clone https://github.com/yourusername/xrag-axiom-engine.git
-cd xrag-axiom-engine
+# Clone repository
+git clone https://github.com/dennistyleo/dennis-xrag-db.git
+cd dennis-xrag-db
 
-# 建立虛擬環境
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 # venv\Scripts\activate  # Windows
 
-# 安裝依賴
+# Install dependencies
 pip install -r requirements.txt
 
-# 初始化資料庫
+# Initialize database
 python scripts/init_db.py
 python scripts/seed_all_axioms.py
-# 啟動 API 伺服器
+Start Services
+bash
+# Terminal 1: API Server
 python src/api_server.py
-# 健康檢查
-curl http://localhost:5001/api/health
 
-# 查看所有公理
-curl http://localhost:5001/api/axioms
+# Terminal 2: Dashboard
+python dashboard_server.py
+Access Interfaces
+Dashboard: http://localhost:5002
 
-# 匹配公理
-curl -X POST http://localhost:5001/api/match \\
-  -H "Content-Type: application/json" \\
+API: http://localhost:5001/api
+
+📊 API Reference
+Endpoint	Method	Description
+/api/health	GET	Health check
+/api/axioms	GET	List all axioms
+/api/variables	GET	List XR variables
+/api/match	POST	Match axiom
+/api/unknown	POST	Submit to unknown channel
+Match Axiom Example
+bash
+curl -X POST http://localhost:5001/api/match \
+  -H "Content-Type: application/json" \
   -d '{
     "candidate": {
-      "name": "Test_Axiom",
+      "name": "Test Axiom",
       "domain": "thermal",
       "computational_core": {
         "type": "heat_conduction",
         "form": "Q = k·A·ΔT/d"
-      },
-      "input_signature": {
-        "required_vars": ["k", "A", "ΔT", "d"]
       }
     }
   }'
-cat > README.md << 'EOF'
-# XRAG 公理引擎
+🔌 XR System Integration
+python
+import requests
 
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Flask](https://img.shields.io/badge/flask-2.3-green.svg)](https://flask.palletsprojects.com/)
-[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+class XRAGClient:
+    def __init__(self, url="http://localhost:5001"):
+        self.url = url
+    
+    def match(self, axiom):
+        response = requests.post(
+            f"{self.url}/api/match",
+            json={"candidate": axiom}
+        )
+        return response.json()
+    
+    def submit_unknown(self, axiom, reason=""):
+        response = requests.post(
+            f"{self.url}/api/unknown",
+            json={"candidate": axiom, "reason": reason}
+        )
+        return response.json()
 
-## 📋 專案簡介
+# Usage
+client = XRAGClient()
+result = client.match({
+    "domain": "thermal",
+    "computational_core": {"form": "Q = k·A·ΔT/d"}
+})
+🖥️ FPGA Hardware Acceleration
+XRAG supports FPGA acceleration with 46,000x performance improvement.
 
-XRAG 公理引擎是一個跨領域的知識庫與匹配系統，支援 17 大領域、132+ 條公理，提供 RESTful API 進行 AI 自創公理的相似度匹配。
-
-## ✨ 功能特色
-
-- **多領域知識庫**：電學、熱學、EMC、流體力學、固體力學、半導體、量子力學、老化、因果漂移、統計指標、控制理論、資訊理論、財務工程、電源行為、基板材料、製造工藝、醫療保健、品質管理
-- **多層次匹配**：語法樹、變數簽章、邊界條件、類比推理
-- **未知通道**：無匹配公理自動儲存，支援人工審查
-- **RESTful API**：完整的 HTTP 介面，易於整合
-- **輕量級**：SQLite 資料庫，無需額外服務
-
-## 🚀 快速開始
-
-### 安裝
-
-```bash
-# 克隆倉庫
-git clone https://github.com/yourusername/xrag-axiom-engine.git
-cd xrag-axiom-engine
-
-# 建立虛擬環境
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate  # Windows
-
-# 安裝依賴
-pip install -r requirements.txt
-
-# 初始化資料庫
-python scripts/init_db.py
-python scripts/seed_all_axioms.pycat > README.md << 'EOF'
-# XRAG 公理引擎
-
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Flask](https://img.shields.io/badge/flask-2.3-green.svg)](https://flask.palletsprojects.com/)
-[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-
-## 📋 專案簡介
-
-XRAG 公理引擎是一個跨領域的知識庫與匹配系統，支援 17 大領域、132+ 條公理，提供 RESTful API 進行 AI 自創公理的相似度匹配。
-
-## ✨ 功能特色
-
-- **多領域知識庫**：電學、熱學、EMC、流體力學、固體力學、半導體、量子力學、老化、因果漂移、統計指標、控制理論、資訊理論、財務工程、電源行為、基板材料、製造工藝、醫療保健、品質管理
-- **多層次匹配**：語法樹、變數簽章、邊界條件、類比推理
-- **未知通道**：無匹配公理自動儲存，支援人工審查
-- **RESTful API**：完整的 HTTP 介面，易於整合
-- **輕量級**：SQLite 資料庫，無需額外服務
-
-## 🚀 快速開始
-
-### 安裝
-
-```bash
-# 克隆倉庫
-git clone https://github.com/yourusername/xrag-axiom-engine.git
-cd xrag-axiom-engine
-
-# 建立虛擬環境
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate  # Windows
-
-# 安裝依賴
-pip install -r requirements.txt
-
-# 初始化資料庫
-python scripts/init_db.py
-python scripts/seed_all_axioms.py
-啟動服務
-bash
-# 啟動 API 伺服器
-python src/api_server.py
-測試
-bash
-# 健康檢查
-curl http://localhost:5001/api/health
-
-# 查看所有公理
-curl http://localhost:5001/api/axioms
-
-# 匹配公理
-curl -X POST http://localhost:5001/api/match \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "candidate": {
-      "name": "Test_Axiom",
-      "domain": "thermal",
-      "computational_core": {
-        "type": "heat_conduction",
-        "form": "Q = k·A·ΔT/d"
-      },
-      "input_signature": {
-        "required_vars": ["k", "A", "ΔT", "d"]
-      }
-    }
-  }'
-📚 API 文檔
-端點	方法	說明
-/api/health	GET	健康檢查
-/api/axioms	GET	列出所有公理
-/api/variables	GET	列出 XR 變數
-/api/match	POST	匹配公理
-/api/unknown	POST	存入未知通道
-📊 資料庫結構
-known_axioms - 已知公理
-
-xr_variables - XR 標準變數
-
-match_history - 匹配歷史
-
-unknown_candidates - 未知候選
-
-📦 領域統計
-領域	數量
-電學	2
-熱學	7
+FPGA Specifications
+Metric	Software	FPGA	Speedup
+Match Latency	2.3 ms	50 ns	46,000x
+Throughput	430 ops/s	20M ops/s	46,500x
+Power	65W	5W	13x
+Axiom Capacity	136	1024	7.5x
+📁 Project Structure
+text
+xrag-axiom-engine/
+├── src/                    # Core source code
+│   ├── api_server.py       # REST API
+│   ├── matcher_engine.py   # Matching engine
+│   ├── db_config.py        # Database config
+│   └── ...
+├── tests/                  # Test files
+│   ├── test_matcher.py
+│   └── test_xr_integration.py
+├── templates/              # Dashboard templates
+│   └── dashboard.html
+├── static/                 # Static files
+│   └── aichip-logo.png
+├── data/                   # Database
+│   └── xrag_complete.db
+├── docs/                   # Documentation
+│   └── fpga/               # FPGA design docs
+├── scripts/                # Utility scripts
+│   ├── init_db.py
+│   └── seed_all_axioms.py
+├── requirements.txt        # Python dependencies
+└── README.md               # This file
+📊 Axiom Statistics
+Domain	Count
+Electrical	2
+Thermal	7
 EMC	3
-流體力學	3
-固體力學	3
-半導體	4
-量子力學	3
-老化	9
-因果漂移	9
-統計指標	9
-控制理論	9
-資訊理論	9
-財務工程	9
-電源行為	9
-基板材料	12
-製造工藝	12
-醫療保健	12
-品質管理	12
-總計	132+
-📝 授權
-MIT License
+Fluid Dynamics	3
+Mechanics	3
+Thermodynamics	4
+Semiconductor	4
+Quantum	3
+Aging	9
+Causal Drift	9
+Statistics	9
+Control Theory	9
+Information Theory	9
+Financial Engineering	9
+Power Supply	9
+Substrate Materials	12
+Manufacturing	12
+Healthcare	12
+Quality Management	12
+Total	136+
+🧪 Running Tests
+bash
+# Run all tests
+pytest tests/
 
-🤝 貢獻
-歡迎提交 Issue 或 Pull Request！
-=======
-# dennis-xrag-db
-Extreme Reliability Axiom Generator
->>>>>>> f63aebb069ec9e4032a2f42c53083bf3d551f73b
+# Run integration test
+python tests/test_xr_xrag_integration.py
+🤝 Contributing
+Fork the project
+
+Create feature branch (git checkout -b feature/amazing-feature)
+
+Commit changes (git commit -m 'Add amazing feature')
+
+Push to branch (git push origin feature/amazing-feature)
+
+Open a Pull Request
+
+📝 License
+MIT License - see LICENSE file
+
+📧 Contact
+Author: Dennis T.Y. Liu
+
+Project Link: https://github.com/dennistyleo/dennis-xrag-db
+
+🙏 Acknowledgements
+Alex Struver - UPASL Integration
+
+AICHIP Corporation - Support & Resources
+
+Built with 🔧 for Extreme Reliability
