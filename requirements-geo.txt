@@ -1,0 +1,5 @@
+# XRAG Geo 依賴
+networkx>=2.6
+scikit-learn>=1.0
+torch>=1.9.0  # 可選，用於GPU加速
+matplotlib>=3.4  # 用於可視化

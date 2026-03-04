@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AICHIP XRAG · Control Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/aichip-logo.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <style>
+        /* 純黑背景，極簡設計 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #FFFFFF;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.5;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+        
+        /* 導航列 */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #222;
+            margin-bottom: 2rem;
+        }
+        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-img {
+            height: 60px;
+            width: auto;
+            object-fit: contain;
+        }
+        
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 400;
+            color: #888;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #111;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            border: 1px solid #222;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #00ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .refresh-btn {
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.5rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #222;
+            border-color: #555;
+        }
+        
+        /* 統計卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .trend-up {
+            color: #00ff00;
+        }
+        
+        /* 面板 */
+        .panel {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* 表單元素 */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-label {
+            display: block;
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-select, .form-input {
+            width: 100%;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+        
+        .form-select option {
+            background: #111;
+            color: #fff;
+        }
+        
+        .param-input {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.5rem;
+            border-radius: 4px;
+            width: 120px;
+        }
+        
+        .param-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: #0f0f0f;
+            border-radius: 6px;
+        }
+        
+        .param-label {
+            width: 120px;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+        
+        .param-unit {
+            color: #666;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        
+        .formula-preview {
+            background: #1a1a1a;
+            border-left: 4px solid #00ff00;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #0f0;
+            margin: 1rem 0;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            padding: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* 雙欄佈局 */
+        .row-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- 導航列 -->
+        <div class="navbar">
+            <div class="logo-area">
+                <img src="/static/aichip-logo.png" alt="AICHIP" class="logo-img">
+                <span class="logo-text">XRAG · Axiom Generator</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span class="status-text">System Online</span>
+                </div>
+                <button onclick="refreshData()" class="refresh-btn">
+                    <i class="fas fa-sync-alt" style="margin-right: 0.5rem;"></i>Refresh
+                </button>
+            </div>
+        </div>
+        
+        <!-- 統計卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header"><span>Total Axioms</span></div>
+                <div class="stat-number" id="totalAxioms">136</div>
+                <div class="stat-footer"><span class="trend-up">↑+12</span> this month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header"><span>Frozen</span></div>
+                <div class="stat-number" id="frozenAxioms">5</div>
+                <div class="stat-footer"><span class="trend-up">↑+2</span> today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header"><span>Pending</span></div>
+                <div class="stat-number" id="pendingReviews">3</div>
+                <div class="stat-footer"><span style="color:#ffaa00">1 high priority</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header"><span>UPASL</span></div>
+                <div class="stat-number" style="font-size:2rem;">Active</div>
+                <div class="stat-footer">2.3ms latency</div>
+            </div>
+        </div>
+
+        <!-- 主要內容：雙欄佈局 -->
+        <div class="row-2col">
+            <!-- 左欄：領域分佈 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-chart-pie" style="color:#888"></i> Domain Distribution
+                </div>
+                <canvas id="domainChart" height="200"></canvas>
+            </div>
+            
+            <!-- 右欄：最近活動 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-history" style="color:#888"></i> Recent Activity
+                </div>
+                <div id="recentActivities" class="space-y-3">
+                    <!-- 動態載入 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二行：待審清單 + 新增公理（使用者友善版） -->
+        <div class="row-2col">
+            <!-- 左欄：待審清單 -->
+            <div class="panel">
+                <div class="panel-title" style="justify-content: space-between;">
+                    <span><i class="fas fa-clipboard-list" style="color:#888"></i> Pending Review</span>
+                    <span style="background:#222; padding:0.2rem 0.8rem; border-radius:40px; font-size:0.8rem;" id="pendingCount">3</span>
+                </div>
+                <div id="pendingList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- 動態載入 -->
+                </div>
+            </div>
+            
+            <!-- 右欄：新增公理（使用者友善版） -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-plus-circle" style="color:#888"></i> Add New Axiom
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Axiom Name</label>
+                    <input type="text" id="axiomName" class="form-input" placeholder="e.g., Bearing Wear Prediction">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Domain</label>
+                    <select id="axiomDomain" class="form-select" onchange="updateFormulaTemplates()">
+                        <option value="thermal">🔥 Thermal</option>
+                        <option value="electrical">⚡ Electrical</option>
+                        <option value="aging">⏳ Aging</option>
+                        <option value="quantum">⚛️ Quantum</option>
+                        <option value="emc">📡 EMC</option>
+                    </select>
+                </div>
+                
+                <!-- 公式模板選擇（使用者友善） -->
+                <div class="form-group">
+                    <label class="form-label">Formula Template</label>
+                    <select id="formulaTemplate" class="form-select" onchange="updateFormulaParameters()">
+                        <optgroup label="熱學" id="thermalTemplates">
+                            <option value="fourier">傅立葉定律 (Q = k·A·ΔT/d)</option>
+                            <option value="convection">牛頓冷卻定律 (Q = h·A·ΔT)</option>
+                            <option value="radiation">史蒂芬-波茲曼 (P = ε·σ·A·T⁴)</option>
+                        </optgroup>
+                        <optgroup label="電學" id="electricalTemplates" style="display:none;">
+                            <option value="ohm">歐姆定律 (V = I·R)</option>
+                            <option value="impedance">阻抗公式 (Z = √(R² + X²))</option>
+                            <option value="power">功率公式 (P = I²·R)</option>
+                        </optgroup>
+                        <optgroup label="老化" id="agingTemplates" style="display:none;">
+                            <option value="arrhenius">阿倫尼斯模型 (L = L₀·exp(-Ea/kT))</option>
+                            <option value="peck">Peck 模型 (溫濕度加速)</option>
+                            <option value="inverse_power">逆冪律 (L = A·V⁻ⁿ)</option>
+                        </optgroup>
+                        <optgroup label="量子" id="quantumTemplates" style="display:none;">
+                            <option value="planck">普朗克關係 (E = h·f)</option>
+                            <option value="schrodinger">薛丁格方程 (iℏ∂ψ/∂t = Hψ)</option>
+                        </optgroup>
+                        <option value="custom">✏️ 自訂公式</option>
+                    </select>
+                </div>
+                
+                <!-- 動態參數輸入區（使用者友善） -->
+                <div id="parameterSection" class="form-group" style="background:#0f0f0f; padding:1rem; border-radius:8px;">
+                    <!-- 由 JavaScript 動態產生 -->
+                </div>
+                
+                <!-- 自訂公式輸入區（預設隱藏） -->
+                <div id="customFormulaSection" class="form-group" style="display:none;">
+                    <label class="form-label">Custom Formula</label>
+                    <input type="text" id="customFormula" class="form-input" 
+                           placeholder="e.g., y = 2.5 * exp(0.3 * x)">
+                    <p class="text-xs text-gray-500 mt-1">支援 +, -, *, /, exp, log, sin, cos</p>
+                </div>
+                
+                <!-- 即時預覽 -->
+                <div id="formulaPreview" class="formula-preview">
+                    Q = k·A·ΔT/d
+                </div>
+                
+                <!-- 信心度滑桿 -->
+                <div class="form-group">
+                    <label class="form-label">Confidence: <span id="confidenceValue">95%</span></label>
+                    <input type="range" id="axiomConfidence" min="0" max="1" step="0.01" value="0.95" 
+                           class="w-full" style="accent-color: #00ff00;" oninput="updateConfidence()">
+                </div>
+                
+                <!-- 需要專家審查 -->
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="requiresExpert" style="width:18px; height:18px;">
+                    <label for="requiresExpert">Requires expert review</label>
+                </div>
+                
+                <button onclick="submitUserFriendlyAxiom()" class="submit-btn mt-4">
+                    <i class="fas fa-paper-plane mr-2"></i>Submit Axiom
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化：根據選擇的領域顯示對應的公式模板
+        function updateFormulaTemplates() {
+            const domain = document.getElementById('axiomDomain').value;
+            
+            // 隱藏所有模板群組
+            document.querySelectorAll('optgroup').forEach(g => g.style.display = 'none');
+            
+            // 顯示對應領域的模板群組
+            document.getElementById(domain + 'Templates').style.display = '';
+            
+            // 重設模板選擇
+            document.getElementById('formulaTemplate').value = 'fourier';
+            updateFormulaParameters();
+        }
+        
+        // 各領域的公式模板參數
+        const templates = {
+            // 熱學
+            fourier: {
+                formula: 'Q = k·A·ΔT/d',
+                params: [
+                    {name: 'k', label: '熱傳導係數', unit: 'W/m·K', default: '237'},
+                    {name: 'A', label: '面積', unit: 'm²', default: '0.01'},
+                    {name: 'ΔT', label: '溫差', unit: 'K', default: '50'},
+                    {name: 'd', label: '厚度', unit: 'm', default: '0.005'}
+                ],
+                output: 'Q',
+                outputUnit: 'W'
+            },
+            convection: {
+                formula: 'Q = h·A·(T_s - T_∞)',
+                params: [
+                    {name: 'h', label: '對流係數', unit: 'W/m²·K', default: '25'},
+                    {name: 'A', label: '面積', unit: 'm²', default: '0.1'},
+                    {name: 'T_s', label: '表面溫度', unit: 'K', default: '353'},
+                    {name: 'T_∞', label: '環境溫度', unit: 'K', default: '293'}
+                ],
+                output: 'Q',
+                outputUnit: 'W'
+            },
+            radiation: {
+                formula: 'P = ε·σ·A·T⁴',
+                params: [
+                    {name: 'ε', label: '發射率', unit: '', default: '0.9'},
+                    {name: 'A', label: '面積', unit: 'm²', default: '0.01'},
+                    {name: 'T', label: '溫度', unit: 'K', default: '373'}
+                ],
+                output: 'P',
+                outputUnit: 'W'
+            },
+            // 電學
+            ohm: {
+                formula: 'V = I·R',
+                params: [
+                    {name: 'I', label: '電流', unit: 'A', default: '1'},
+                    {name: 'R', label: '電阻', unit: 'Ω', default: '100'}
+                ],
+                output: 'V',
+                outputUnit: 'V'
+            },
+            impedance: {
+                formula: 'Z = √(R² + (ωL - 1/ωC)²)',
+                params: [
+                    {name: 'R', label: '電阻', unit: 'Ω', default: '50'},
+                    {name: 'L', label: '電感', unit: 'H', default: '0.001'},
+                    {name: 'C', label: '電容', unit: 'F', default: '1e-6'},
+                    {name: 'ω', label: '角頻率', unit: 'rad/s', default: '314'}
+                ],
+                output: 'Z',
+                outputUnit: 'Ω'
+            },
+            power: {
+                formula: 'P = I²·R',
+                params: [
+                    {name: 'I', label: '電流', unit: 'A', default: '2'},
+                    {name: 'R', label: '電阻', unit: 'Ω', default: '50'}
+                ],
+                output: 'P',
+                outputUnit: 'W'
+            },
+            // 老化
+            arrhenius: {
+                formula: 'L = L₀·exp(-Ea/(k·T))',
+                params: [
+                    {name: 'L₀', label: '初始壽命', unit: 'hours', default: '100000'},
+                    {name: 'Ea', label: '活化能', unit: 'eV', default: '0.85'},
+                    {name: 'T', label: '溫度', unit: 'K', default: '353'}
+                ],
+                output: 'L',
+                outputUnit: 'hours'
+            },
+            peck: {
+                formula: 'AF = (RH/RH₀)ⁿ·exp(Ea/k·(1/T₀-1/T))',
+                params: [
+                    {name: 'RH', label: '相對濕度', unit: '%', default: '85'},
+                    {name: 'n', label: '濕度指數', unit: '', default: '3'},
+                    {name: 'Ea', label: '活化能', unit: 'eV', default: '0.8'}
+                ],
+                output: 'AF',
+                outputUnit: ''
+            }
+        };
+        
+        // 更新參數輸入欄位
+        function updateFormulaParameters() {
+            const templateKey = document.getElementById('formulaTemplate').value;
+            const paramSection = document.getElementById('parameterSection');
+            const customSection = document.getElementById('customFormulaSection');
+            const preview = document.getElementById('formulaPreview');
+            
+            if (templateKey === 'custom') {
+                paramSection.style.display = 'none';
+                customSection.style.display = 'block';
+                preview.innerHTML = '自訂公式';
+                return;
+            }
+            
+            paramSection.style.display = 'block';
+            customSection.style.display = 'none';
+            
+            const tmpl = templates[templateKey];
+            if (!tmpl) return;
+            
+            // 產生參數輸入欄位
+            let html = '<div style="display:grid; gap:0.75rem;">';
+            
+            tmpl.params.forEach(p => {
+                html += `
+                    <div class="param-row">
+                        <span class="param-label">${p.label}:</span>
+                        <input type="text" class="param-input" id="param_${p.name}" value="${p.default}">
+                        <span class="param-unit">${p.unit}</span>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            
+            // 加入輸出資訊
+            html += `
+                <div style="margin-top:1rem; padding-top:0.5rem; border-top:1px solid #333;">
+                    <span style="color:#888;">輸出: </span>
+                    <span style="color:#0f0;">${tmpl.output}</span>
+                    <span style="color:#666; margin-left:0.5rem;">${tmpl.outputUnit}</span>
+                </div>
+            `;
+            
+            paramSection.innerHTML = html;
+            
+            // 更新預覽
+            preview.innerHTML = tmpl.formula;
+        }
+        
+        // 更新信心度顯示
+        function updateConfidence() {
+            const val = document.getElementById('axiomConfidence').value;
+            document.getElementById('confidenceValue').textContent = Math.round(val*100) + '%';
+        }
+        
+        // 提交使用者友善的公理
+        function submitUserFriendlyAxiom() {
+            const templateKey = document.getElementById('formulaTemplate').value;
+            
+            let mathematicalForm;
+            
+            if (templateKey === 'custom') {
+                // 自訂公式
+                mathematicalForm = {
+                    type: 'custom',
+                    form: document.getElementById('customFormula').value
+                };
+            } else {
+                // 從範本收集參數
+                const tmpl = templates[templateKey];
+                const params = {};
+                tmpl.params.forEach(p => {
+                    params[p.name] = parseFloat(document.getElementById(`param_${p.name}`).value);
+                });
+                
+                // 產生公式字串
+                let form = tmpl.formula;
+                tmpl.params.forEach(p => {
+                    form = form.replace(p.name, params[p.name]);
+                });
+                
+                mathematicalForm = {
+                    type: templateKey,
+                    form: form,
+                    parameters: params,
+                    output: tmpl.output
+                };
+            }
+            
+            // 組裝完整的候選公理
+            const axiom = {
+                name: document.getElementById('axiomName').value,
+                domain: document.getElementById('axiomDomain').value,
+                computational_core: mathematicalForm,
+                confidence: parseFloat(document.getElementById('axiomConfidence').value),
+                requires_expert: document.getElementById('requiresExpert').checked
+            };
+            
+            // 提交到後端
+            fetch('/api/submit_axiom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(axiom)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Axiom submitted successfully!');
+                    document.getElementById('axiomName').value = '';
+                    loadPendingReviews();
+                }
+            })
+            .catch(err => {
+                alert('❌ Error: ' + err);
+            });
+        }
+        
+        // 載入待審清單
+        function loadPendingReviews() {
+            fetch('/api/pending_reviews')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('pendingList');
+                    list.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        list.innerHTML = '<div style="text-align:center; padding:2rem; color:#666;">No pending reviews</div>';
+                        return;
+                    }
+                    
+                    data.forEach(item => {
+                        list.innerHTML += `
+                            <div style="background:#111; border-left:4px solid #ffaa00; padding:1rem; margin-bottom:0.75rem;">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <div>
+                                        <strong>${item.name}</strong>
+                                        <div style="font-size:0.85rem; color:#888;">${item.domain} · ${Math.round(item.confidence*100)}% confidence</div>
+                                    </div>
+                                    <div>
+                                        <button onclick="reviewAxiom('${item.candidate_id}', true)" 
+                                                style="background:#00ff00; color:#000; border:none; padding:0.3rem 0.8rem; border-radius:4px; margin-right:0.3rem;">✓</button>
+                                        <button onclick="reviewAxiom('${item.candidate_id}', false)" 
+                                                style="background:#ff4444; color:#fff; border:none; padding:0.3rem 0.8rem; border-radius:4px;">✗</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+        }
+        
+        // 審查公理
+        function reviewAxiom(id, approved) {
+            fetch('/api/review_axiom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    candidate_id: id,
+                    reviewer: 'Admin',
+                    approved: approved
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                loadPendingReviews();
+            });
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFormulaParameters();
+            loadPendingReviews();
+        });
+    </script>
+</body>
+</html>

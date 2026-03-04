@@ -542,7 +542,7 @@
 
         <!-- 第二行：單公理新增 + 多公理分析 -->
         <div class="row-2col">
-            <!-- 左欄：單公理新增 -->
+            <!-- 左欄：單公理新增 (原本的) -->
             <div class="panel">
                 <div class="panel-title">
                     <i class="fas fa-plus-circle" style="color:#888"></i> Add Single Axiom
@@ -602,7 +602,7 @@
                 </button>
             </div>
             
-            <!-- 右欄：多公理分析 -->
+            <!-- 右欄：多公理分析 (全新) -->
             <div class="panel">
                 <div class="panel-title">
                     <i class="fas fa-cubes" style="color:#888"></i> 
@@ -612,7 +612,7 @@
                 
                 <!-- 已選公理列表 -->
                 <div id="selectedAxioms" class="selected-axioms">
-                    <div class="text-gray-500 text-center py-4">No axioms selected</div>
+                    <!-- 動態加入 -->
                 </div>
                 
                 <!-- 添加公理按鈕 -->
@@ -620,7 +620,7 @@
                     <i class="fas fa-plus"></i> Add Axiom to Analysis
                 </button>
                 
-                <!-- 共享參數區 -->
+                <!-- 共享參數區 (自動產生) -->
                 <div id="sharedParamsSection" class="shared-params" style="display:none;">
                     <h4 class="text-white font-medium mb-3">🔗 Shared Parameters</h4>
                     <p class="text-gray-400 text-sm mb-3">These parameters appear in multiple axioms</p>
@@ -642,7 +642,7 @@
                 <div id="multiResults" class="results-section" style="display:none;">
                     <h4 class="text-white font-medium mb-3">📊 Analysis Results</h4>
                     
-                    <!-- 個別結果 -->
+                    <!-- 個別結果 (三欄) -->
                     <div id="individualResults" class="grid grid-cols-3 gap-3 mb-4"></div>
                     
                     <!-- 綜合分數 -->
@@ -670,10 +670,10 @@
                 <label class="form-label">Domain</label>
                 <select id="modalDomain" class="form-select" onchange="modalUpdateSubdomains()">
                     <option value="">-- Choose Domain --</option>
-                    <option value="thermal">🔥 Thermal</option>
-                    <option value="electrical">⚡ Electrical</option>
-                    <option value="aging">⏳ Aging</option>
-                    <option value="quantum">⚛️ Quantum</option>
+                    <option value="thermal">🔥 Thermal (35)</option>
+                    <option value="electrical">⚡ Electrical (28)</option>
+                    <option value="aging">⏳ Aging (22)</option>
+                    <option value="quantum">⚛️ Quantum (15)</option>
                 </select>
             </div>
             
@@ -703,9 +703,44 @@
     </div>
 
     <script>
-        // ==================== 完整的公式模板資料庫 ====================
+        // ==================== 資料定義 ====================
+        const domainHierarchy = {
+            thermal: {
+                name: 'Thermal',
+                icon: '🔥',
+                subdomains: {
+                    conduction: { name: 'Heat Conduction', count: 12 },
+                    convection: { name: 'Convection', count: 8 },
+                    radiation: { name: 'Thermal Radiation', count: 7 }
+                }
+            },
+            electrical: {
+                name: 'Electrical',
+                icon: '⚡',
+                subdomains: {
+                    dc: { name: 'DC Circuits', count: 10 },
+                    ac: { name: 'AC Circuits', count: 8 }
+                }
+            },
+            aging: {
+                name: 'Aging',
+                icon: '⏳',
+                subdomains: {
+                    temperature: { name: 'Temperature Acceleration', count: 8 },
+                    mechanical: { name: 'Mechanical Fatigue', count: 5 }
+                }
+            },
+            quantum: {
+                name: 'Quantum',
+                icon: '⚛️',
+                subdomains: {
+                    wave: { name: 'Wave Mechanics', count: 5 },
+                    uncertainty: { name: 'Uncertainty', count: 3 }
+                }
+            }
+        };
+        
         const formulaTemplates = {
-            // ========== 熱學 ==========
             conduction: {
                 fourier: {
                     name: 'Fourier\'s Law',
@@ -718,86 +753,8 @@
                     ],
                     output: 'Q',
                     outputUnit: 'W'
-                },
-                resistance: {
-                    name: 'Thermal Resistance',
-                    formula: 'R_th = d/(k·A)',
-                    params: [
-                        {name: 'd', label: 'Thickness', unit: 'm', default: '0.01'},
-                        {name: 'k', label: 'Thermal Conductivity', unit: 'W/m·K', default: '237'},
-                        {name: 'A', label: 'Area', unit: 'm²', default: '0.1'}
-                    ],
-                    output: 'R_th',
-                    outputUnit: 'K/W'
                 }
             },
-            convection: {
-                newton: {
-                    name: 'Newton\'s Law of Cooling',
-                    formula: 'Q = h·A·(T_s - T_∞)',
-                    params: [
-                        {name: 'h', label: 'Convection Coefficient', unit: 'W/m²·K', default: '25'},
-                        {name: 'A', label: 'Area', unit: 'm²', default: '0.1'},
-                        {name: 'T_s', label: 'Surface Temperature', unit: 'K', default: '353'},
-                        {name: 'T_∞', label: 'Ambient Temperature', unit: 'K', default: '293'}
-                    ],
-                    output: 'Q',
-                    outputUnit: 'W'
-                }
-            },
-            radiation: {
-                stefan: {
-                    name: 'Stefan-Boltzmann Law',
-                    formula: 'P = ε·σ·A·T⁴',
-                    params: [
-                        {name: 'ε', label: 'Emissivity', unit: '', default: '0.9'},
-                        {name: 'A', label: 'Area', unit: 'm²', default: '0.01'},
-                        {name: 'T', label: 'Temperature', unit: 'K', default: '373'}
-                    ],
-                    output: 'P',
-                    outputUnit: 'W'
-                }
-            },
-            
-            // ========== 電學 ==========
-            dc: {
-                ohm: {
-                    name: 'Ohm\'s Law',
-                    formula: 'V = I·R',
-                    params: [
-                        {name: 'I', label: 'Current', unit: 'A', default: '1'},
-                        {name: 'R', label: 'Resistance', unit: 'Ω', default: '100'}
-                    ],
-                    output: 'V',
-                    outputUnit: 'V'
-                },
-                power: {
-                    name: 'Joule Heating',
-                    formula: 'P = I²·R',
-                    params: [
-                        {name: 'I', label: 'Current', unit: 'A', default: '2'},
-                        {name: 'R', label: 'Resistance', unit: 'Ω', default: '50'}
-                    ],
-                    output: 'P',
-                    outputUnit: 'W'
-                }
-            },
-            ac: {
-                impedance: {
-                    name: 'Impedance',
-                    formula: 'Z = √(R² + (ωL - 1/ωC)²)',
-                    params: [
-                        {name: 'R', label: 'Resistance', unit: 'Ω', default: '50'},
-                        {name: 'L', label: 'Inductance', unit: 'H', default: '0.001'},
-                        {name: 'C', label: 'Capacitance', unit: 'F', default: '1e-6'},
-                        {name: 'ω', label: 'Angular Frequency', unit: 'rad/s', default: '314'}
-                    ],
-                    output: 'Z',
-                    outputUnit: 'Ω'
-                }
-            },
-            
-            // ========== 老化 ==========
             temperature: {
                 arrhenius: {
                     name: 'Arrhenius Model',
@@ -809,172 +766,18 @@
                     ],
                     output: 'L',
                     outputUnit: 'hours'
-                },
-                peck: {
-                    name: 'Peck Humidity Model',
-                    formula: 'AF = (RH/RH₀)ⁿ·exp(Ea/k·(1/T₀-1/T))',
-                    params: [
-                        {name: 'RH', label: 'Relative Humidity', unit: '%', default: '85'},
-                        {name: 'n', label: 'Humidity Exponent', unit: '', default: '3'},
-                        {name: 'Ea', label: 'Activation Energy', unit: 'eV', default: '0.8'},
-                        {name: 'T', label: 'Temperature', unit: 'K', default: '353'}
-                    ],
-                    output: 'AF',
-                    outputUnit: ''
                 }
             },
-            mechanical: {
-                sn_curve: {
-                    name: 'S-N Curve (Basquin)',
-                    formula: 'σ = σ_f·(2N_f)^b',
+            dc: {
+                ohm: {
+                    name: 'Ohm\'s Law',
+                    formula: 'V = I·R',
                     params: [
-                        {name: 'σ_f', label: 'Fatigue Strength Coef', unit: 'MPa', default: '900'},
-                        {name: 'b', label: 'Fatigue Exponent', unit: '', default: '-0.12'},
-                        {name: 'N_f', label: 'Cycles to Failure', unit: '', default: '10000'}
+                        {name: 'I', label: 'Current', unit: 'A', default: '1'},
+                        {name: 'R', label: 'Resistance', unit: 'Ω', default: '100'}
                     ],
-                    output: 'σ',
-                    outputUnit: 'MPa'
-                },
-                coffins_manson: {
-                    name: 'Coffin-Manson',
-                    formula: 'Δε/2 = ε_f·(2N_f)^c',
-                    params: [
-                        {name: 'ε_f', label: 'Fatigue Ductility', unit: '', default: '0.5'},
-                        {name: 'c', label: 'Ductility Exponent', unit: '', default: '-0.6'},
-                        {name: 'N_f', label: 'Cycles to Failure', unit: '', default: '10000'}
-                    ],
-                    output: 'Δε/2',
-                    outputUnit: 'strain'
-                },
-                paris: {
-                    name: 'Paris Law',
-                    formula: 'da/dN = C·(ΔK)^m',
-                    params: [
-                        {name: 'C', label: 'Paris Constant', unit: '', default: '1e-12'},
-                        {name: 'm', label: 'Paris Exponent', unit: '', default: '3'},
-                        {name: 'ΔK', label: 'Stress Intensity', unit: 'MPa√m', default: '10'}
-                    ],
-                    output: 'da/dN',
-                    outputUnit: 'm/cycle'
-                }
-            },
-            voltage: {
-                inverse_power: {
-                    name: 'Inverse Power Law',
-                    formula: 'L = A·V⁻ⁿ',
-                    params: [
-                        {name: 'A', label: 'Constant', unit: '', default: '1e6'},
-                        {name: 'V', label: 'Voltage', unit: 'V', default: '100'},
-                        {name: 'n', label: 'Voltage Exponent', unit: '', default: '2.5'}
-                    ],
-                    output: 'L',
-                    outputUnit: 'hours'
-                }
-            },
-            
-            // ========== 量子力學 ==========
-            wave: {
-                schrodinger: {
-                    name: 'Schrödinger Equation',
-                    formula: 'iℏ∂ψ/∂t = Ĥψ',
-                    params: [
-                        {name: 'ψ', label: 'Wave Function', unit: '', default: '1'},
-                        {name: 'E', label: 'Energy', unit: 'eV', default: '1.6e-19'}
-                    ],
-                    output: 'ψ',
-                    outputUnit: ''
-                }
-            },
-            uncertainty: {
-                heisenberg: {
-                    name: 'Heisenberg Uncertainty',
-                    formula: 'Δx·Δp ≥ ℏ/2',
-                    params: [
-                        {name: 'Δx', label: 'Position Uncertainty', unit: 'm', default: '1e-10'},
-                        {name: 'Δp', label: 'Momentum Uncertainty', unit: 'kg·m/s', default: '5e-25'}
-                    ],
-                    output: 'ℏ/2',
-                    outputUnit: 'J·s'
-                }
-            },
-            
-            // ========== EMC ==========
-            shielding: {
-                se: {
-                    name: 'Shielding Effectiveness',
-                    formula: 'SE = 20·log₁₀(E₁/E₂)',
-                    params: [
-                        {name: 'E₁', label: 'Incident Field', unit: 'V/m', default: '100'},
-                        {name: 'E₂', label: 'Transmitted Field', unit: 'V/m', default: '1'}
-                    ],
-                    output: 'SE',
-                    outputUnit: 'dB'
-                }
-            },
-            crosstalk: {
-                three_w: {
-                    name: '3W Rule',
-                    formula: 'Crosstalk ∝ 1/s²',
-                    params: [
-                        {name: 's', label: 'Trace Spacing', unit: 'mm', default: '0.5'},
-                        {name: 'W', label: 'Trace Width', unit: 'mm', default: '0.15'}
-                    ],
-                    output: 'Crosstalk',
-                    outputUnit: 'dB'
-                }
-            },
-            
-            // ========== 流體力學 ==========
-            fluid: {
-                bernoulli: {
-                    name: 'Bernoulli\'s Equation',
-                    formula: 'P + ½ρv² + ρgh = constant',
-                    params: [
-                        {name: 'P', label: 'Pressure', unit: 'Pa', default: '101325'},
-                        {name: 'ρ', label: 'Density', unit: 'kg/m³', default: '1000'},
-                        {name: 'v', label: 'Velocity', unit: 'm/s', default: '10'},
-                        {name: 'h', label: 'Height', unit: 'm', default: '0'}
-                    ],
-                    output: 'Total',
-                    outputUnit: 'Pa'
-                }
-            }
-        };
-
-        // ==================== 領域層級定義 ====================
-        const domainHierarchy = {
-            thermal: {
-                name: 'Thermal',
-                icon: '🔥',
-                subdomains: {
-                    conduction: { name: 'Heat Conduction', count: 2 },
-                    convection: { name: 'Convection', count: 1 },
-                    radiation: { name: 'Thermal Radiation', count: 1 }
-                }
-            },
-            electrical: {
-                name: 'Electrical',
-                icon: '⚡',
-                subdomains: {
-                    dc: { name: 'DC Circuits', count: 2 },
-                    ac: { name: 'AC Circuits', count: 1 }
-                }
-            },
-            aging: {
-                name: 'Aging',
-                icon: '⏳',
-                subdomains: {
-                    temperature: { name: 'Temperature Acceleration', count: 2 },
-                    mechanical: { name: 'Mechanical Fatigue', count: 3 },
-                    voltage: { name: 'Voltage Stress', count: 1 }
-                }
-            },
-            quantum: {
-                name: 'Quantum',
-                icon: '⚛️',
-                subdomains: {
-                    wave: { name: 'Wave Mechanics', count: 1 },
-                    uncertainty: { name: 'Uncertainty', count: 1 }
+                    output: 'V',
+                    outputUnit: 'V'
                 }
             }
         };
@@ -1310,14 +1113,7 @@
             const unitMap = {
                 'k': 'W/m·K', 'A': 'm²', 'ΔT': 'K', 'd': 'm',
                 'L₀': 'hours', 'Ea': 'eV', 'T': 'K',
-                'I': 'A', 'R': 'Ω',
-                'σ_f': 'MPa', 'b': '', 'N_f': '',
-                'C': '', 'm': '', 'ΔK': 'MPa√m',
-                'ψ': '', 'E': 'eV',
-                'Δx': 'm', 'Δp': 'kg·m/s',
-                'E₁': 'V/m', 'E₂': 'V/m',
-                's': 'mm', 'W': 'mm',
-                'P': 'Pa', 'ρ': 'kg/m³', 'v': 'm/s', 'h': 'm'
+                'I': 'A', 'R': 'Ω'
             };
             return unitMap[param] || '';
         }
@@ -1381,7 +1177,7 @@
             const values = [];
             
             selectedAxioms.forEach(axiom => {
-                // 簡單的模擬計算
+                // 簡單的模擬計算 (實際應調用 API)
                 const value = Math.random() * 100;
                 values.push(value);
                 individualResults.push({
@@ -1427,7 +1223,7 @@
             document.getElementById('combinedScore').textContent = 
                 (data.combined_score * 100).toFixed(0) + '%';
             
-            // 繪製靈敏度圖
+            // 繪製靈敏度圖 (簡化版)
             const ctx = document.getElementById('sensitivityChart').getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
@@ -1448,6 +1244,7 @@
         
         // ==================== 工具函數 ====================
         function refreshData() {
+            // 刷新數據 (demo)
             console.log('Refreshing data...');
         }
         

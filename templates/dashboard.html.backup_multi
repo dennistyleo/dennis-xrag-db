@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AICHIP XRAG · Control Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/aichip-logo.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <style>
+        /* 純黑背景 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #FFFFFF;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.5;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+        
+        /* 導航列 */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #222;
+            margin-bottom: 2rem;
+        }
+        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-img {
+            height: 60px;
+            width: auto;
+            object-fit: contain;
+        }
+        
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 400;
+            color: #888;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #111;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            border: 1px solid #222;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #00ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .refresh-btn {
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.5rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #222;
+            border-color: #555;
+        }
+        
+        /* 統計卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .trend-up {
+            color: #00ff00;
+        }
+        
+        /* 面板 */
+        .panel {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* 表單元素 */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-label {
+            display: block;
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-select, .form-input {
+            width: 100%;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+        
+        .form-select option {
+            background: #111;
+            color: #fff;
+        }
+        
+        .form-select optgroup {
+            background: #111;
+            color: #aaa;
+            font-weight: 600;
+        }
+        
+        .param-input {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.5rem;
+            border-radius: 4px;
+            width: 120px;
+        }
+        
+        .param-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: #0f0f0f;
+            border-radius: 6px;
+        }
+        
+        .param-label {
+            width: 140px;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+        
+        .param-unit {
+            color: #666;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        
+        .formula-preview {
+            background: #1a1a1a;
+            border-left: 4px solid #00ff00;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #0f0;
+            margin: 1rem 0;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            padding: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* 雙欄佈局 */
+        .row-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* 分類計數徽章 */
+        .category-badge {
+            background: #222;
+            color: #aaa;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- Navigation -->
+        <div class="navbar">
+            <div class="logo-area">
+                <img src="/static/aichip-logo.png" alt="AICHIP" class="logo-img">
+                <span class="logo-text">XRAG · Axiom Engine</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span class="status-text">System Online</span>
+                </div>
+                <button onclick="refreshData()" class="refresh-btn">
+                    <i class="fas fa-sync-alt" style="margin-right: 0.5rem;"></i>Refresh
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header"><span>Total Axioms</span></div>
+                <div class="stat-number" id="totalAxioms">136</div>
+                <div class="stat-footer"><span class="trend-up">↑+12</span> this month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header"><span>Frozen</span></div>
+                <div class="stat-number" id="frozenAxioms">5</div>
+                <div class="stat-footer"><span class="trend-up">↑+2</span> today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header"><span>Pending</span></div>
+                <div class="stat-number" id="pendingReviews">3</div>
+                <div class="stat-footer"><span style="color:#ffaa00">1 high priority</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header"><span>UPASL</span></div>
+                <div class="stat-number" style="font-size:2rem;">Active</div>
+                <div class="stat-footer">2.3ms latency</div>
+            </div>
+        </div>
+
+        <!-- Main Content: Two Columns -->
+        <div class="row-2col">
+            <!-- Left: Domain Distribution -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-chart-pie" style="color:#888"></i> Domain Distribution
+                </div>
+                <canvas id="domainChart" height="200"></canvas>
+            </div>
+            
+            <!-- Right: Recent Activity -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-history" style="color:#888"></i> Recent Activity
+                </div>
+                <div id="recentActivities" class="space-y-3">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Second Row: Pending + Add Axiom -->
+        <div class="row-2col">
+            <!-- Left: Pending Reviews -->
+            <div class="panel">
+                <div class="panel-title" style="justify-content: space-between;">
+                    <span><i class="fas fa-clipboard-list" style="color:#888"></i> Pending Review</span>
+                    <span style="background:#222; padding:0.2rem 0.8rem; border-radius:40px; font-size:0.8rem;" id="pendingCount">3</span>
+                </div>
+                <div id="pendingList" style="max-height: 500px; overflow-y: auto;">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+            
+            <!-- Right: Add New Axiom (Multi-level Categories) -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-plus-circle" style="color:#888"></i> Add New Axiom
+                </div>
+                
+                <!-- Step 1: Axiom Name -->
+                <div class="form-group">
+                    <label class="form-label">Axiom Name</label>
+                    <input type="text" id="axiomName" class="form-input" placeholder="e.g., Bearing Wear Prediction">
+                </div>
+                
+                <!-- Step 2: Domain Selection (Level 1) -->
+                <div class="form-group">
+                    <label class="form-label">1. Select Domain</label>
+                    <select id="axiomDomain" class="form-select" onchange="updateSubdomains()">
+                        <option value="">-- Choose Domain --</option>
+                        <option value="thermal">🔥 Thermal (35 axioms)</option>
+                        <option value="electrical">⚡ Electrical (28 axioms)</option>
+                        <option value="aging">⏳ Aging (22 axioms)</option>
+                        <option value="quantum">⚛️ Quantum (15 axioms)</option>
+                        <option value="emc">📡 EMC (18 axioms)</option>
+                        <option value="mechanics">🔧 Mechanics (12 axioms)</option>
+                        <option value="fluid">💧 Fluid Dynamics (10 axioms)</option>
+                        <option value="thermodynamics">🧪 Thermodynamics (8 axioms)</option>
+                        <option value="semiconductor">🔬 Semiconductor (12 axioms)</option>
+                        <option value="control">🎛️ Control Theory (9 axioms)</option>
+                        <option value="information">📐 Information Theory (9 axioms)</option>
+                        <option value="financial">💰 Financial (9 axioms)</option>
+                        <option value="power">🔋 Power Supply (9 axioms)</option>
+                        <option value="substrate">🧩 Substrate (12 axioms)</option>
+                        <option value="manufacturing">⚙️ Manufacturing (12 axioms)</option>
+                        <option value="healthcare">🏥 Healthcare (12 axioms)</option>
+                        <option value="quality">✅ Quality (12 axioms)</option>
+                    </select>
+                </div>
+                
+                <!-- Step 3: Subdomain Selection (Level 2) -->
+                <div class="form-group">
+                    <label class="form-label">2. Select Category</label>
+                    <select id="axiomSubdomain" class="form-select" onchange="updateFormulaTemplates()" disabled>
+                        <option value="">-- First select domain --</option>
+                    </select>
+                </div>
+                
+                <!-- Step 4: Formula Template (Level 3) -->
+                <div class="form-group">
+                    <label class="form-label">3. Select Formula Template</label>
+                    <select id="formulaTemplate" class="form-select" onchange="updateFormulaParameters()" disabled>
+                        <option value="">-- First select category --</option>
+                    </select>
+                </div>
+                
+                <!-- Dynamic Parameter Input Section -->
+                <div id="parameterSection" class="form-group" style="background:#0f0f0f; padding:1rem; border-radius:8px;">
+                    <!-- Generated by JavaScript -->
+                </div>
+                
+                <!-- Custom Formula Section (hidden by default) -->
+                <div id="customFormulaSection" class="form-group" style="display:none;">
+                    <label class="form-label">Custom Formula</label>
+                    <input type="text" id="customFormula" class="form-input" 
+                           placeholder="e.g., y = 2.5 * exp(0.3 * x)">
+                    <p class="text-xs text-gray-500 mt-1">Supported: +, -, *, /, exp, log, sin, cos</p>
+                </div>
+                
+                <!-- Live Preview -->
+                <div id="formulaPreview" class="formula-preview">
+                    Select a formula template
+                </div>
+                
+                <!-- Confidence Slider -->
+                <div class="form-group">
+                    <label class="form-label">Confidence: <span id="confidenceValue">95%</span></label>
+                    <input type="range" id="axiomConfidence" min="0" max="1" step="0.01" value="0.95" 
+                           class="w-full" style="accent-color: #00ff00;" oninput="updateConfidence()">
+                </div>
+                
+                <!-- Expert Review Checkbox -->
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="requiresExpert" style="width:18px; height:18px;">
+                    <label for="requiresExpert">Requires expert review</label>
+                </div>
+                
+                <button onclick="submitUserFriendlyAxiom()" class="submit-btn mt-4">
+                    <i class="fas fa-paper-plane mr-2"></i>Submit Axiom
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Domain hierarchy data
+        const domainHierarchy = {
+            thermal: {
+                name: 'Thermal',
+                icon: '🔥',
+                subdomains: {
+                    conduction: { name: 'Heat Conduction', count: 12 },
+                    convection: { name: 'Convection', count: 8 },
+                    radiation: { name: 'Thermal Radiation', count: 7 },
+                    properties: { name: 'Material Properties', count: 8 }
+                }
+            },
+            electrical: {
+                name: 'Electrical',
+                icon: '⚡',
+                subdomains: {
+                    dc: { name: 'DC Circuits', count: 10 },
+                    ac: { name: 'AC Circuits', count: 8 },
+                    transmission: { name: 'Transmission Lines', count: 6 },
+                    power: { name: 'Power Electronics', count: 4 }
+                }
+            },
+            aging: {
+                name: 'Aging',
+                icon: '⏳',
+                subdomains: {
+                    temperature: { name: 'Temperature Acceleration', count: 8 },
+                    humidity: { name: 'Humidity Effects', count: 5 },
+                    voltage: { name: 'Voltage Stress', count: 4 },
+                    mechanical: { name: 'Mechanical Fatigue', count: 5 }
+                }
+            },
+            quantum: {
+                name: 'Quantum',
+                icon: '⚛️',
+                subdomains: {
+                    wave: { name: 'Wave Mechanics', count: 5 },
+                    uncertainty: { name: 'Uncertainty Principles', count: 3 },
+                    semiconductor: { name: 'Quantum Semiconductors', count: 7 }
+                }
+            },
+            emc: {
+                name: 'EMC',
+                icon: '📡',
+                subdomains: {
+                    shielding: { name: 'Shielding Effectiveness', count: 6 },
+                    crosstalk: { name: 'Crosstalk', count: 4 },
+                    impedance: { name: 'Impedance Control', count: 5 },
+                    radiation: { name: 'EM Radiation', count: 3 }
+                }
+            }
+        };
+        
+        // Formula templates by subdomain
+        const formulaTemplates = {
+            conduction: {
+                fourier: {
+                    name: 'Fourier\'s Law',
+                    formula: 'Q = k·A·ΔT/d',
+                    params: [
+                        {name: 'k', label: 'Thermal Conductivity', unit: 'W/m·K', default: '237'},
+                        {name: 'A', label: 'Area', unit: 'm²', default: '0.01'},
+                        {name: 'ΔT', label: 'Temperature Difference', unit: 'K', default: '50'},
+                        {name: 'd', label: 'Thickness', unit: 'm', default: '0.005'}
+                    ],
+                    output: 'Q',
+                    outputUnit: 'W'
+                },
+                resistance: {
+                    name: 'Thermal Resistance',
+                    formula: 'R_th = d/(k·A)',
+                    params: [
+                        {name: 'd', label: 'Thickness', unit: 'm', default: '0.01'},
+                        {name: 'k', label: 'Thermal Conductivity', unit: 'W/m·K', default: '237'},
+                        {name: 'A', label: 'Area', unit: 'm²', default: '0.1'}
+                    ],
+                    output: 'R_th',
+                    outputUnit: 'K/W'
+                }
+            },
+            convection: {
+            newton: {
+                    name: 'Newton\'s Law of Cooling',
+                    formula: 'Q = h·A·(T_s - T_∞)',
+                    params: [
+                        {name: 'h', label: 'Convection Coefficient', unit: 'W/m²·K', default: '25'},
+                        {name: 'A', label: 'Area', unit: 'm²', default: '0.1'},
+                        {name: 'T_s', label: 'Surface Temperature', unit: 'K', default: '353'},
+                        {name: 'T_∞', label: 'Ambient Temperature', unit: 'K', default: '293'}
+                    ],
+                    output: 'Q',
+                    outputUnit: 'W'
+                }
+            },
+            radiation: {
+                stefan: {
+                    name: 'Stefan-Boltzmann Law',
+                    formula: 'P = ε·σ·A·T⁴',
+                    params: [
+                        {name: 'ε', label: 'Emissivity', unit: '', default: '0.9'},
+                        {name: 'A', label: 'Area', unit: 'm²', default: '0.01'},
+                        {name: 'T', label: 'Temperature', unit: 'K', default: '373'}
+                    ],
+                    output: 'P',
+                    outputUnit: 'W'
+                }
+            },
+            temperature: {
+                arrhenius: {
+                    name: 'Arrhenius Model',
+                    formula: 'L = L₀·exp(-Ea/(k·T))',
+                    params: [
+                        {name: 'L₀', label: 'Initial Life', unit: 'hours', default: '100000'},
+                        {name: 'Ea', label: 'Activation Energy', unit: 'eV', default: '0.85'},
+                        {name: 'T', label: 'Temperature', unit: 'K', default: '353'}
+                    ],
+                    output: 'L',
+                    outputUnit: 'hours'
+                }
+            },
+            dc: {
+                ohm: {
+                    name: 'Ohm\'s Law',
+                    formula: 'V = I·R',
+                    params: [
+                        {name: 'I', label: 'Current', unit: 'A', default: '1'},
+                        {name: 'R', label: 'Resistance', unit: 'Ω', default: '100'}
+                    ],
+                    output: 'V',
+                    outputUnit: 'V'
+                },
+                power: {
+                    name: 'Power Law',
+                    formula: 'P = I²·R',
+                    params: [
+                        {name: 'I', label: 'Current', unit: 'A', default: '2'},
+                        {name: 'R', label: 'Resistance', unit: 'Ω', default: '50'}
+                    ],
+                    output: 'P',
+                    outputUnit: 'W'
+                }
+            },
+            ac: {
+                impedance: {
+                    name: 'Impedance',
+                    formula: 'Z = √(R² + (ωL - 1/ωC)²)',
+                    params: [
+                        {name: 'R', label: 'Resistance', unit: 'Ω', default: '50'},
+                        {name: 'L', label: 'Inductance', unit: 'H', default: '0.001'},
+                        {name: 'C', label: 'Capacitance', unit: 'F', default: '1e-6'},
+                        {name: 'ω', label: 'Angular Frequency', unit: 'rad/s', default: '314'}
+                    ],
+                    output: 'Z',
+                    outputUnit: 'Ω'
+                }
+            },
+            shielding: {
+                se: {
+                    name: 'Shielding Effectiveness',
+                    formula: 'SE = 20·log₁₀(E₁/E₂)',
+                    params: [
+                        {name: 'E₁', label: 'Incident Field', unit: 'V/m', default: '100'},
+                        {name: 'E₂', label: 'Transmitted Field', unit: 'V/m', default: '1'}
+                    ],
+                    output: 'SE',
+                    outputUnit: 'dB'
+                }
+            }
+        };
+        
+        // Update subdomains based on selected domain
+        function updateSubdomains() {
+            const domain = document.getElementById('axiomDomain').value;
+            const subdomainSelect = document.getElementById('axiomSubdomain');
+            const templateSelect = document.getElementById('formulaTemplate');
+            
+            if (!domain) {
+                subdomainSelect.innerHTML = '<option value="">-- First select domain --</option>';
+                subdomainSelect.disabled = true;
+                templateSelect.innerHTML = '<option value="">-- First select category --</option>';
+                templateSelect.disabled = true;
+                return;
+            }
+            
+            const domainData = domainHierarchy[domain];
+            if (!domainData) return;
+            
+            let options = '<option value="">-- Select category --</option>';
+            for (const [key, sub] of Object.entries(domainData.subdomains)) {
+                options += `<option value="${key}">${sub.name} (${sub.count} formulas)</option>`;
+            }
+            
+            subdomainSelect.innerHTML = options;
+            subdomainSelect.disabled = false;
+            
+            // Reset template select
+            templateSelect.innerHTML = '<option value="">-- First select category --</option>';
+            templateSelect.disabled = true;
+        }
+        
+        // Update formula templates based on selected subdomain
+        function updateFormulaTemplates() {
+            const subdomain = document.getElementById('axiomSubdomain').value;
+            const templateSelect = document.getElementById('formulaTemplate');
+            
+            if (!subdomain) {
+                templateSelect.innerHTML = '<option value="">-- First select category --</option>';
+                templateSelect.disabled = true;
+                return;
+            }
+            
+            const templates = formulaTemplates[subdomain];
+            if (!templates) {
+                templateSelect.innerHTML = '<option value="">-- No templates available --</option>';
+                templateSelect.disabled = false;
+                return;
+            }
+            
+            let options = '<option value="">-- Select formula --</option>';
+            for (const [key, tmpl] of Object.entries(templates)) {
+                options += `<option value="${key}">${tmpl.name}</option>`;
+            }
+            options += `<option value="custom">✏️ Custom formula</option>`;
+            
+            templateSelect.innerHTML = options;
+            templateSelect.disabled = false;
+        }
+        
+        // Update parameter input fields based on selected template
+        function updateFormulaParameters() {
+            const templateKey = document.getElementById('formulaTemplate').value;
+            const subdomain = document.getElementById('axiomSubdomain').value;
+            const paramSection = document.getElementById('parameterSection');
+            const customSection = document.getElementById('customFormulaSection');
+            const preview = document.getElementById('formulaPreview');
+            
+            if (!templateKey) {
+                paramSection.innerHTML = '<div style="color:#666; text-align:center; padding:2rem;">Select a formula template</div>';
+                customSection.style.display = 'none';
+                preview.innerHTML = 'Select a formula template';
+                return;
+            }
+            
+            if (templateKey === 'custom') {
+                paramSection.style.display = 'none';
+                customSection.style.display = 'block';
+                preview.innerHTML = 'Custom formula';
+                return;
+            }
+            
+            paramSection.style.display = 'block';
+            customSection.style.display = 'none';
+            
+            const templates = formulaTemplates[subdomain];
+            const tmpl = templates[templateKey];
+            if (!tmpl) return;
+            
+            // Generate parameter input fields
+            let html = '<div style="display:grid; gap:0.75rem;">';
+            
+            tmpl.params.forEach(p => {
+                html += `
+                    <div class="param-row">
+                        <span class="param-label">${p.label}:</span>
+                        <input type="text" class="param-input" id="param_${p.name}" value="${p.default}">
+                        <span class="param-unit">${p.unit}</span>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            
+            // Add output info
+            html += `
+                <div style="margin-top:1rem; padding-top:0.5rem; border-top:1px solid #333;">
+                    <span style="color:#888;">Output: </span>
+                    <span style="color:#0f0;">${tmpl.output}</span>
+                    <span style="color:#666; margin-left:0.5rem;">${tmpl.outputUnit}</span>
+                </div>
+            `;
+            
+            paramSection.innerHTML = html;
+            preview.innerHTML = tmpl.formula;
+        }
+        
+        // Update confidence display
+        function updateConfidence() {
+            const val = document.getElementById('axiomConfidence').value;
+            document.getElementById('confidenceValue').textContent = Math.round(val*100) + '%';
+        }
+        
+        // Submit user-friendly axiom
+        function submitUserFriendlyAxiom() {
+            const templateKey = document.getElementById('formulaTemplate').value;
+            const subdomain = document.getElementById('axiomSubdomain').value;
+            
+            let mathematicalForm;
+            
+            if (templateKey === 'custom') {
+                mathematicalForm = {
+                    type: 'custom',
+                    form: document.getElementById('customFormula').value
+                };
+            } else {
+                const templates = formulaTemplates[subdomain];
+                const tmpl = templates[templateKey];
+                
+                // Collect parameters
+                const params = {};
+                tmpl.params.forEach(p => {
+                    params[p.name] = parseFloat(document.getElementById(`param_${p.name}`).value);
+                });
+                
+                // Generate formula string with actual values
+                let form = tmpl.formula;
+                tmpl.params.forEach(p => {
+                    form = form.replace(p.name, params[p.name]);
+                });
+                
+                mathematicalForm = {
+                    type: templateKey,
+                    form: form,
+                    parameters: params,
+                    output: tmpl.output
+                };
+            }
+            
+            // Build complete candidate axiom
+            const axiom = {
+                name: document.getElementById('axiomName').value,
+                domain: document.getElementById('axiomDomain').value,
+                subdomain: subdomain,
+                computational_core: mathematicalForm,
+                confidence: parseFloat(document.getElementById('axiomConfidence').value),
+                requires_expert: document.getElementById('requiresExpert').checked
+            };
+            
+            // Submit to backend
+            fetch('/api/submit_axiom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(axiom)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Axiom submitted successfully!');
+                    document.getElementById('axiomName').value = '';
+                    loadPendingReviews();
+                } else {
+                    alert('❌ Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                alert('❌ Error: ' + err);
+            });
+        }
+        
+        // Load pending reviews
+        function loadPendingReviews() {
+            fetch('/api/pending_reviews')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('pendingList');
+                    list.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        list.innerHTML = '<div style="text-align:center; padding:2rem; color:#666;">No pending reviews</div>';
+                        document.getElementById('pendingCount').textContent = '0';
+                        return;
+                    }
+                    
+                    data.forEach(item => {
+                        list.innerHTML += `
+                            <div style="background:#111; border-left:4px solid #ffaa00; padding:1rem; margin-bottom:0.75rem;">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <div>
+                                        <strong>${item.name}</strong>
+                                        <div style="font-size:0.85rem; color:#888;">${item.domain} · ${Math.round(item.confidence*100)}% confidence</div>
+                                    </div>
+                                    <div>
+                                        <button onclick="reviewAxiom('${item.candidate_id}', true)" 
+                                                style="background:#00ff00; color:#000; border:none; padding:0.3rem 0.8rem; border-radius:4px; margin-right:0.3rem;">✓</button>
+                                        <button onclick="reviewAxiom('${item.candidate_id}', false)" 
+                                                style="background:#ff4444; color:#fff; border:none; padding:0.3rem 0.8rem; border-radius:4px;">✗</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('pendingCount').textContent = data.length;
+                });
+        }
+        
+        // Review axiom
+        function reviewAxiom(id, approved) {
+            fetch('/api/review_axiom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    candidate_id: id,
+                    reviewer: 'Admin',
+                    approved: approved
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    loadPendingReviews();
+                }
+            });
+        }
+        
+        // Refresh data
+        function refreshData() {
+            fetch('/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('totalAxioms').textContent = data.total_axioms || 136;
+                    document.getElementById('frozenAxioms').textContent = data.frozen_axioms || 5;
+                    document.getElementById('pendingReviews').textContent = data.pending_reviews || 3;
+                });
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPendingReviews();
+            refreshData();
+            
+            // Initialize chart
+            const ctx = document.getElementById('domainChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Thermal', 'Electrical', 'Aging', 'Quantum', 'EMC', 'Other'],
+                    datasets: [{
+                        data: [35, 28, 22, 15, 18, 18],
+                        backgroundColor: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
