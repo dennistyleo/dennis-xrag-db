@@ -241,3 +241,77 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 >>>>>>> f63aebb069ec9e4032a2f42c53083bf3d551f73b
+# 追加 XRAG 特定的忽略規則到文件末尾
+cat >> .gitignore << 'EOF'
+
+# XRAG - Extreme Reliability Axiom Generator
+# 數據文件
+data/
+*.csv
+*.xlsx
+*.parquet
+*.pkl
+*.h5
+*.npy
+
+# IMS 凍結包
+ims_packages/
+*.json
+
+# 模型文件
+models/
+*.pt
+*.pth
+*.onnx
+
+# 可視化輸出
+plots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf
+*.svg
+gnn_graph_visualization.png
+
+# 測試和日誌
+logs/
+*.log
+test_output/
+pytest_cache/
+.coverage
+htmlcov/
+.coverage.*
+*.coverage
+.tox/
+
+# 臨時文件
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# 虛擬環境
+venv/
+env/
+ENV/
+venv.bak/
+env.bak/
+
+# Python 緩存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 分發文件
+dist/
+build/
+*.egg-info/
